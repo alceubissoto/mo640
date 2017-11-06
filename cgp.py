@@ -50,6 +50,138 @@ def active_nodes(ind):
             evaluated.append(to_eval[0])
     return used_nodes
 
+
+'''
+    a     b     c     d     e
+a   0    12    12    12    12
+b   12    0     4     6     6
+c   12    4     0     6     6
+d   12    6     6     0     2
+e   12    6     6     2     0
+
+matrix[1][0] = 12
+'''
+
+matrix = np.array([[0, 0, 12, 12, 12, 12],
+                   [1, 12, 0, 4, 6, 6],
+                   [2, 12, 4, 0, 6, 6],
+                   [3, 12, 6, 6, 0, 2],
+                   [4, 12, 6, 6, 2, 0]])
+
+def upgma(matrix):
+    new_ind = {}
+    new_ind['genotype'] = []
+    min_value = 10000 # infinito positivo
+    updt_mtx = matrix
+    next_node = input_amount
+
+    while (updt_mtx.shape[0] > 1):
+        min_value = 10000 # infinito positivo
+        # Search for the closest objects
+        print("SHAPE: ", updt_mtx.shape)
+        for row in range(updt_mtx.shape[0]):
+            for column in range(1, updt_mtx.shape[1]):
+                if (updt_mtx[row, column] < min_value) and (updt_mtx[row, column] > 0):
+                    min_value = updt_mtx[row, column]
+                    C1_idx = updt_mtx[row, 0]
+                    C1_row = row
+                    C1_column = column
+                    C2_idx = updt_mtx[column-1, 0]
+                    C2_row = column-1
+                    C2_column = row+1
+                    C1 = updt_mtx[row, :]
+                    C2 = updt_mtx[column-1, :]
+
+        #print("C1_idx:", C1_idx, "\nC1_column:", C1_column, "\nC2_idx:", C2_idx, "\nC2_column:", C2_column, "\nC1", C1, "\nC2", C2)
+        # Delete the rows and columns with respect to the selected objects
+        if C1_column > C2_column:
+            updt_mtx = np.delete(updt_mtx, C1_column, 1)
+            updt_mtx = np.delete(updt_mtx, C2_row, 0)
+            updt_mtx = np.delete(updt_mtx, C2_column, 1)
+            updt_mtx = np.delete(updt_mtx, C1_row, 0)
+            C1 = np.delete(C1, C1_column)
+            C1 = np.delete(C1, C2_column)
+            C2 = np.delete(C2, C1_column)
+            C2 = np.delete(C2, C2_column)
+        else:
+            updt_mtx = np.delete(updt_mtx, C2_column, 1)
+            updt_mtx = np.delete(updt_mtx, C1_row, 0)
+            updt_mtx = np.delete(updt_mtx, C1_column, 1)
+            updt_mtx = np.delete(updt_mtx, C2_row, 0)
+            C1 = np.delete(C1, C2_column)
+            C1 = np.delete(C1, C1_column)
+            C2 = np.delete(C2, C2_column)
+            C2 = np.delete(C2, C1_column)
+
+        print(updt_mtx, min_value)
+
+        # Evaluate the new row/column values
+        D_row = np.array(range(updt_mtx.shape[1]))
+        D_row[0] = next_node
+        C1 = np.ravel(C1)
+        C2 = np.ravel(C2)
+        print("C1:", C1, "\nC2:", C2)
+
+        for i in range(1, len(D_row)):
+            D_row[i] = (C1[i]+C2[i])/2
+        print("D_ROW:", D_row)
+
+        # Concatenate the new row/column to the matrix
+        D_column = np.matrix(np.append(D_row[1:], 0)).transpose()
+        updt_mtx = np.append(updt_mtx, [D_row], axis=0)
+        updt_mtx = np.append(updt_mtx, D_column, axis=1)
+
+        print("AFTER", updt_mtx)
+        new_ind['genotype'].append(C1_idx)
+        new_ind['genotype'].append(C2_idx)
+        new_ind['genotype'].append(0)
+        print(new_ind)
+        next_node = next_node + 1
+
+    new_ind['output'] = next_node -1
+    new_ind = fill_individual(new_ind)
+
+    return new_ind
+
+
+def fill_individual(ind):
+    new_ind = {}
+    new_ind['genotype'] = []
+    out = ind['output']
+    tmp_ind = create_new_individual() # individual we are merging our ultrametric tree.
+    factor = int(ind_size/out) # Factor by which the keys will be multiplied
+    active = active_nodes(ind)
+    new_active = {}
+    # New values for the actual nodes of the tree
+    for key, value in active.items():
+        for i in range(len(value)-1):
+            if (value[i] > input_amount-1):
+                value[i] = value[i]*factor
+        new_active[key*factor] = value
+    print("ACTIVE:", new_active)
+
+    # New individual formation
+    for i in range(ind_size):
+        if(i+input_amount in new_active.keys()):
+            new_ind['genotype'].append(new_active[i+input_amount][0])
+            new_ind['genotype'].append(new_active[i+input_amount][1])
+            new_ind['genotype'].append(new_active[i+input_amount][2])
+        else:
+            new_ind['genotype'].append(tmp_ind['genotype'][i*3])
+            new_ind['genotype'].append(tmp_ind['genotype'][i*3+1])
+            new_ind['genotype'].append(tmp_ind['genotype'][i*3+2])
+    new_ind['output'] = ind['output']*factor
+    return new_ind
+
+
+#adapted = fill_individual(new_ind)
+new_ind = upgma(matrix)
+print(new_ind)
+used = active_nodes(new_ind)
+#print("ADAPTED", adapted)
+print("USED", used)
+
+#    return ind
 '''
 # input: individuo, matriz de distancias.
 # output: 'fitness'
@@ -79,7 +211,8 @@ def reproduction():
 '''
 
 
-ind = create_new_individual()
-act = active_nodes(ind)
-print(ind)
-print(act)
+
+#ind = create_new_individual()
+#act = active_nodes(ind)
+#print(ind)
+#print(act)
