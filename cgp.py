@@ -78,6 +78,7 @@ def upgma(matrix):
     while (updt_mtx.shape[0] > 1):
         min_value = 10000 # infinito positivo
         # Search for the closest objects
+
         for row in range(updt_mtx.shape[0]):
             for column in range(1, updt_mtx.shape[1]):
                 if (updt_mtx[row, column] < min_value) and (updt_mtx[row, column] > 0):
@@ -194,7 +195,7 @@ def mutation(ind): #STILL NEED TO BE ABLE TO MUTATE THE OUTPUT
     ind['genotype'][(key[0]-input_amount)*3+chosen_item] = random.randint(0, key[0]-1)
     return ind
 
-
+new_ind = upgma(matrix)
 mutated = mutation(new_ind)
 
 #experiment = []
