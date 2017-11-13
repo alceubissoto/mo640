@@ -78,7 +78,6 @@ def upgma(matrix):
     while (updt_mtx.shape[0] > 1):
         min_value = 10000 # infinito positivo
         # Search for the closest objects
-        print("SHAPE: ", updt_mtx.shape)
         for row in range(updt_mtx.shape[0]):
             for column in range(1, updt_mtx.shape[1]):
                 if (updt_mtx[row, column] < min_value) and (updt_mtx[row, column] > 0):
@@ -92,7 +91,6 @@ def upgma(matrix):
                     C1 = updt_mtx[row, :]
                     C2 = updt_mtx[column-1, :]
 
-        #print("C1_idx:", C1_idx, "\nC1_column:", C1_column, "\nC2_idx:", C2_idx, "\nC2_column:", C2_column, "\nC1", C1, "\nC2", C2)
         # Delete the rows and columns with respect to the selected objects
         if C1_column > C2_column:
             updt_mtx = np.delete(updt_mtx, C1_column, 1)
@@ -113,29 +111,26 @@ def upgma(matrix):
             C2 = np.delete(C2, C2_column)
             C2 = np.delete(C2, C1_column)
 
-        print(updt_mtx, min_value)
+#        print(updt_mtx, min_value)
 
         # Evaluate the new row/column values
         D_row = np.array(range(updt_mtx.shape[1]))
         D_row[0] = next_node
         C1 = np.ravel(C1)
         C2 = np.ravel(C2)
-        print("C1:", C1, "\nC2:", C2)
 
         for i in range(1, len(D_row)):
             D_row[i] = (C1[i]+C2[i])/2
-        print("D_ROW:", D_row)
 
         # Concatenate the new row/column to the matrix
         D_column = np.matrix(np.append(D_row[1:], 0)).transpose()
         updt_mtx = np.append(updt_mtx, [D_row], axis=0)
         updt_mtx = np.append(updt_mtx, D_column, axis=1)
 
-        print("AFTER", updt_mtx)
         new_ind['genotype'].append(C1_idx)
         new_ind['genotype'].append(C2_idx)
         new_ind['genotype'].append(0)
-        print(new_ind)
+
         next_node = next_node + 1
 
     new_ind['output'] = next_node -1
@@ -158,7 +153,7 @@ def fill_individual(ind):
             if (value[i] > input_amount-1):
                 value[i] = value[i]*factor
         new_active[key*factor] = value
-    print("ACTIVE:", new_active)
+#    print("ACTIVE:", new_active)
 
     # New individual formation
     for i in range(ind_size):
@@ -174,14 +169,57 @@ def fill_individual(ind):
     return new_ind
 
 
-#adapted = fill_individual(new_ind)
-new_ind = upgma(matrix)
-print(new_ind)
-used = active_nodes(new_ind)
-#print("ADAPTED", adapted)
-print("USED", used)
+def isValid(active):
+    count = 0
+    for _, value in active.items():
+        for i in range(len(value)-1):
+            if value[i] < input_amount:
+                count = count + 1
+    if count == input_amount:
+        return True
+    else:
+        return False
 
-#    return ind
+def mutation(ind): #STILL NEED TO BE ABLE TO MUTATE THE OUTPUT
+    gen = ind['genotype']
+    out = ind['output']
+    #print(gen)
+    used = active_nodes(ind)
+    #print(used)
+    used_list = list(used.items())
+    key = random.choice(used_list)
+    #print(key)
+    chosen_item = random.randint(0,1)
+    #print(chosen_item)
+    ind['genotype'][(key[0]-input_amount)*3+chosen_item] = random.randint(0, key[0]-1)
+    return ind
+
+
+mutated = mutation(new_ind)
+
+#experiment = []
+#for i in range(10000):
+count =0
+while True:
+    mutated = mutation(mutated)
+    #print(new_ind)
+    active_mut = active_nodes(mutated)
+    #print(mutated)
+    #print(active_mut)
+    count = count + 1
+    #print("COUNT:", count)
+    if(isValid(active_mut)):
+        break
+#    experiment.append(count)
+#    print(i)
+print(active_mut)
+#experiment = np.array(experiment)
+#print("MEAN:", np.mean(experiment))
+#print("STD:", np.std(experiment))
+
+#print ("COUNT:", count)
+#print(isValid(used))
+
 '''
 # input: individuo, matriz de distancias.
 # output: 'fitness'
@@ -207,12 +245,4 @@ def reproduction():
     # re-calcula o fitness
     # passa pra proxima geração.
 
-
 '''
-
-
-
-#ind = create_new_individual()
-#act = active_nodes(ind)
-#print(ind)
-#print(act)
