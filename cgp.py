@@ -170,7 +170,7 @@ def fill_individual(ind):
     return new_ind
 
 
-def isValid(active):
+def isValidGraph(active):
     count = 0
     for _, value in active.items():
         for i in range(len(value)-1):
@@ -180,6 +180,48 @@ def isValid(active):
         return True
     else:
         return False
+
+def getBinaryTree(valid_graph):
+    root = max(valid_graph.keys())
+    # set input in order 
+    input_number = 0
+    for key, values in valid_graph.items():
+        if values[0] < input_amount:
+            values[0] = input_number
+            input_number += 1
+        if values[1] < input_amount:
+            values[1] = input_number
+            input_number += 1
+    
+    visited = set()
+    valid_tree = dict()
+
+    # build binary tree, assumes that tree has at least 2 inputs
+    recursiveGetBinaryTree(root, valid_graph, visited, valid_tree)
+    return valid_tree
+
+
+def recursiveGetBinaryTree(cur, valid_graph, visited, valid_tree):
+    if cur in visited:
+        return -1 
+
+    visited.add(cur)
+
+    # If input, return itself
+    if cur < input_amount:
+        return cur
+
+    left = valid_graph[cur][0]
+    right = valid_graph[cur][1]
+    node_with_input_left = recursiveGetBinaryTree(left, valid_graph, visited, valid_tree)
+    node_with_input_right = recursiveGetBinaryTree(right, valid_graph, visited, valid_tree)
+
+    if node_with_input_left >= 0 and node_with_input_right >= 0:
+        valid_tree[cur] = [node_with_input_left, node_with_input_right]
+        return cur
+
+    return node_with_input_left if node_with_input_left >= 0 else node_with_input_right
+
 
 def mutation(ind): #STILL NEED TO BE ABLE TO MUTATE THE OUTPUT
     gen = ind['genotype']
@@ -209,17 +251,19 @@ while True:
     #print(active_mut)
     count = count + 1
     #print("COUNT:", count)
-    if(isValid(active_mut)):
+    if(isValidGraph(active_mut)):
         break
 #    experiment.append(count)
 #    print(i)
-print(active_mut)
+
+valid_tree = getBinaryTree(active_mut)
+print(valid_tree)
 #experiment = np.array(experiment)
 #print("MEAN:", np.mean(experiment))
 #print("STD:", np.std(experiment))
 
 #print ("COUNT:", count)
-#print(isValid(used))
+#print(isValidGraph(used))
 
 '''
 # input: individuo, matriz de distancias.
