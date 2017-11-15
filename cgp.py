@@ -211,6 +211,9 @@ def recursiveGetBinaryTree(cur, valid_graph, visited, valid_tree):
 
     return node_with_input_left if node_with_input_left >= 0 else node_with_input_right
 
+def findEdgeWeights(valid_tree, matrix):
+    print valid_tree, matrix
+
 
 def mutation(ind): #STILL NEED TO BE ABLE TO MUTATE THE OUTPUT
     gen = ind['genotype']
@@ -317,7 +320,7 @@ def create_matrix_dist(qty=1):
                 break
 
 
-def test():
+def test(matrix):
     '''
     SANDBOX
     For everyone to play around
@@ -333,13 +336,15 @@ def test():
     e   12    6     6     2     0
 
     matrix[1][0] = 12
-    '''
 
     matrix = np.array([[0, 0, 12, 12, 12, 12],
                        [1, 12, 0, 4, 6, 6],
                        [2, 12, 4, 0, 6, 6],
                        [3, 12, 6, 6, 0, 2],
                        [4, 12, 6, 6, 2, 0]])
+    '''
+
+    matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), matrix))
     new_ind = upgma(matrix)
     mutated = mutation(new_ind)
 
@@ -364,6 +369,8 @@ def test():
     print('----------------- valid tree ---------------------')
     valid_tree = getBinaryTree(active_mut)
     print(valid_tree)
+
+    findEdgeWeights(valid_tree, matrix)
     # experiment = np.array(experiment)
     # print("MEAN:", np.mean(experiment))
     # print("STD:", np.std(experiment))
@@ -399,12 +406,23 @@ def test():
 
 
 def main(args):
-    if args[1] == 'dataset':
-        print('creating dataset...')
-        create_matrix_dist()
-        print('dataset created! look at directory "dataset"')
+    if len(args) > 1:
+        if args[1] == 'dataset':
+            print('creating dataset...')
+            create_matrix_dist()
+            print('dataset created! look at directory "dataset"')
+        else:
+            dist_matrix = np.load(args[1])
+            print dist_matrix
+            test(dist_matrix)
     else:
-        test()
+        print '''Usage:
+                 Create distance matrix: 
+                    $ python cgp.py dataset
+                 
+                 Run algorithm with input:
+                    $ python cgp.py <path_input>'
+                    '''
 
 
 if __name__ == "__main__":
