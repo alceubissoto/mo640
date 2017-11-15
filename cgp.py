@@ -241,7 +241,6 @@ def get_matrix_dist(valid_tree, num_leafs, lowest_weight=1, highest_weight=10):
 
     row = []
     col = []
-
     for key, values in valid_tree.items():
         row.append(key)
         col.append(values[0])
@@ -264,7 +263,7 @@ def get_matrix_dist(valid_tree, num_leafs, lowest_weight=1, highest_weight=10):
     graph = csr_matrix((wgt, (np.array(row), np.array(col))), shape=(num_nodes, num_nodes))
 
     print('------- edges ------')
-    print('*** Nodes from 0 to ' + str(num_nodes-1) + ' are the leaf nodes***')
+    print('*** Nodes from 0 to ' + str(num_leafs-1) + ' are the leaf nodes***')
     print('   edge      weight')
     print(graph)
     dist_matrix = shortest_path(graph, directed = False)
