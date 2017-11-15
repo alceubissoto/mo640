@@ -415,7 +415,6 @@ def test(matrix):
 
 
 def main(args):
-<<<<<<< HEAD
     if len(args) > 1:
         if args[1] == 'dataset':
             print('creating dataset...')
@@ -425,12 +424,6 @@ def main(args):
             dist_matrix = np.load(args[1])
             print dist_matrix
             test(dist_matrix)
-=======
-    if len(args) > 1 and args[1] == 'dataset':
-        print('creating dataset...')
-        create_matrix_dist()
-        print('dataset created! look at directory "dataset"')
->>>>>>> b56b7def25b95434f1e4b37bbd831e1ad92e6011
     else:
         print '''Usage:
                  Create distance matrix: 
