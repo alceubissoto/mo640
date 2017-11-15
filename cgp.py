@@ -8,7 +8,7 @@ import sys
 
 # Seria interessante receber os parametros antes da execucao
 ind_size = 100   # Size of every individual
-input_amount = 5 # Amount of inputs
+input_amount = 20 # Amount of inputs
 func_amount = 2  # Amount of functions STILL NEED TO DEFINE THESE
 pop_size = 5     # Population Size
 # Talvez as operacoes devessem ser já formatos de arvores (uniao de varios nos)..
@@ -257,16 +257,16 @@ def get_matrix_dist(valid_tree, num_leafs, lowest_weight=1, highest_weight=10):
     row = map(lambda x: new_index[x], row)
     col = map(lambda x: new_index[x], col)
 
-    print '------- nodes ------'
+    print('------- nodes ------')
     num_nodes = len(set(row + col))
     print('num nodes = ' + str(num_nodes))
 
     graph = csr_matrix((wgt, (np.array(row), np.array(col))), shape=(num_nodes, num_nodes))
 
-    print '------- edges ------'
-    print '*** edges from 0 to ' + str(num_nodes-1) + ' are the leaf nodes***'
-    print '   edge      weight'
-    print graph
+    print('------- edges ------')
+    print('*** edges from 0 to ' + str(num_nodes-1) + ' are the leaf nodes***')
+    print('   edge      weight')
+    print(graph)
     dist_matrix = shortest_path(graph, directed = False)
 
     # only the leaf nodes which are biological objects
@@ -393,9 +393,9 @@ def test():
 
 def main(args):
     if args[1] == 'dataset':
-        print 'creating dataset...'
+        print('creating dataset...')
         create_matrix_dist()
-        print 'dataset created! look at directory "dataset"'
+        print('dataset created! look at directory "dataset"')
     else:
         test()
 
