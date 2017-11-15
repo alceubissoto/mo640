@@ -1,12 +1,17 @@
+# -*- coding: utf-8 -*-
+
 import numpy as np
 import random
+import os
+import time
+import sys
 
 # Seria interessante receber os parametros antes da execucao
 ind_size = 100   # Size of every individual
 input_amount = 5 # Amount of inputs
 func_amount = 2  # Amount of functions STILL NEED TO DEFINE THESE
 pop_size = 5     # Population Size
-# Talvez as operações devessem ser já formatos de árvores (uniao de varios nos)..
+# Talvez as operacoes devessem ser já formatos de arvores (uniao de varios nos)..
 
 def create_new_individual():
     new_ind = {}
@@ -50,23 +55,6 @@ def active_nodes(ind):
             evaluated.append(to_eval[0])
     return used_nodes
 
-
-'''
-    a     b     c     d     e
-a   0    12    12    12    12
-b   12    0     4     6     6
-c   12    4     0     6     6
-d   12    6     6     0     2
-e   12    6     6     2     0
-
-matrix[1][0] = 12
-'''
-
-matrix = np.array([[0, 0, 12, 12, 12, 12],
-                   [1, 12, 0, 4, 6, 6],
-                   [2, 12, 4, 0, 6, 6],
-                   [3, 12, 6, 6, 0, 2],
-                   [4, 12, 6, 6, 2, 0]])
 
 def upgma(matrix):
     new_ind = {}
@@ -181,6 +169,7 @@ def isValidGraph(active):
     else:
         return False
 
+
 def getBinaryTree(valid_graph):
     root = max(valid_graph.keys())
     # set input in order 
@@ -237,57 +226,179 @@ def mutation(ind): #STILL NEED TO BE ABLE TO MUTATE THE OUTPUT
     ind['genotype'][(key[0]-input_amount)*3+chosen_item] = random.randint(0, key[0]-1)
     return ind
 
-new_ind = upgma(matrix)
-mutated = mutation(new_ind)
 
-#experiment = []
-#for i in range(10000):
-count =0
-while True:
-    mutated = mutation(mutated)
-    #print(new_ind)
-    active_mut = active_nodes(mutated)
-    #print(mutated)
-    #print(active_mut)
-    count = count + 1
-    #print("COUNT:", count)
-    if(isValidGraph(active_mut)):
-        break
-#    experiment.append(count)
-#    print(i)
+def get_matrix_dist(valid_tree, num_leafs, lowest_weight=1, highest_weight=10):
+    '''
+    Based on a valid tree, create the additive matrix + some gaussian noise.
+    :param valid_tree:
+    :param num_leafs:
+    :param lowest_weight:
+    :param highest_weight:
+    :return:
+    '''
+    from scipy.sparse import csr_matrix
+    from scipy.sparse.csgraph import connected_components, dijkstra, shortest_path
 
-valid_tree = getBinaryTree(active_mut)
-print(valid_tree)
-#experiment = np.array(experiment)
-#print("MEAN:", np.mean(experiment))
-#print("STD:", np.std(experiment))
+    row = []
+    col = []
 
-#print ("COUNT:", count)
-#print(isValidGraph(used))
+    for key, values in valid_tree.items():
+        row.append(key)
+        col.append(values[0])
+        row.append(key)
+        col.append(values[1])
 
-'''
-# input: individuo, matriz de distancias.
-# output: 'fitness'
-def evaluate(ind)
+    # convert indexes
+    wgt = list(np.random.randint(lowest_weight, highest_weight, size=len(row)))
+
+    nodes = np.unique(row + col)
+    indices = np.argsort(nodes)
+    new_index =  dict(zip(nodes, indices))
+    row = map(lambda x: new_index[x], row)
+    col = map(lambda x: new_index[x], col)
+
+    print '------- nodes ------'
+    num_nodes = len(set(row + col))
+    print('num nodes = ' + str(num_nodes))
+
+    graph = csr_matrix((wgt, (np.array(row), np.array(col))), shape=(num_nodes, num_nodes))
+
+    print '------- edges ------'
+    print '*** edges from 0 to ' + str(num_nodes-1) + ' are the leaf nodes***'
+    print '   edge      weight'
+    print graph
+    dist_matrix = shortest_path(graph, directed = False)
+
+    # only the leaf nodes which are biological objects
+    dist_matrix = dist_matrix[0:num_leafs, 0:num_leafs]
+
+    # add gaussian noise
+    dist_matrix += np.rint(np.random.normal(0, 1, dist_matrix.shape))
+
+    return dist_matrix
 
 
-#input: individuo para ser mutado, chance de mutação.
-#output: novo individuo mutado
-def mutation(ind)
+def create_matrix_dist(qty=100):
+    '''
+    Creates matrix distances in the quantity specified.
+    Saves matrix distances as numpy files.
+    :param qty: number of matrices to create
+    :return: none
+    '''
+
+    matrix = np.array([[0, 0, 12, 12, 12, 12],
+                       [1, 12, 0, 4, 6, 6],
+                       [2, 12, 4, 0, 6, 6],
+                       [3, 12, 6, 6, 0, 2],
+                       [4, 12, 6, 6, 2, 0]])
+    new_ind = upgma(matrix)
+    mutated = mutation(new_ind)
+    for i in range(qty):
+        while True:
+            mutated = mutation(mutated)
+            active_mut = active_nodes(mutated)
+            if isValidGraph(active_mut):
+                valid_tree = getBinaryTree(active_mut)
+                dist_matrix = get_matrix_dist(valid_tree, input_amount)
+
+                directory = 'dataset'
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
+
+                millis = int(round(time.time() * 1000))
+                np.save(os.path.join(directory, str(millis) + '.npy'), dist_matrix)
+                break
 
 
-def create_population():
-    pop = []
-    for i in range(pop_size):
-        pop.append(create_new_individual())
-    return pop
+def test():
+    '''
+    SANDBOX
+    For everyone to play around
+    :return:
+    '''
 
-#input: population, numero max de geracoes.
-#output: best individual (solution)
-def reproduction():
-    # ordena os individuos
-    # Cria 4 mutacoes do mais apto.
-    # re-calcula o fitness
-    # passa pra proxima geração.
+    '''
+        a     b     c     d     e
+    a   0    12    12    12    12
+    b   12    0     4     6     6
+    c   12    4     0     6     6
+    d   12    6     6     0     2
+    e   12    6     6     2     0
 
-'''
+    matrix[1][0] = 12
+    '''
+
+    matrix = np.array([[0, 0, 12, 12, 12, 12],
+                       [1, 12, 0, 4, 6, 6],
+                       [2, 12, 4, 0, 6, 6],
+                       [3, 12, 6, 6, 0, 2],
+                       [4, 12, 6, 6, 2, 0]])
+    new_ind = upgma(matrix)
+    mutated = mutation(new_ind)
+
+    # experiment = []
+    # for i in range(10000):
+    count = 0
+    while True:
+        mutated = mutation(mutated)
+        # print(new_ind)
+        active_mut = active_nodes(mutated)
+        # print(mutated)
+        # print(active_mut)
+        count = count + 1
+        # print("COUNT:", count)
+        if (isValidGraph(active_mut)):
+            break
+    # experiment.append(count)
+    #    print(i)
+    print('----------------- active mut ---------------------')
+    print(active_mut)
+
+    print('----------------- valid tree ---------------------')
+    valid_tree = getBinaryTree(active_mut)
+    print(valid_tree)
+    # experiment = np.array(experiment)
+    # print("MEAN:", np.mean(experiment))
+    # print("STD:", np.std(experiment))
+
+    # print ("COUNT:", count)
+    # print(isValidGraph(used))
+
+    '''
+    # input: individuo, matriz de distancias.
+    # output: 'fitness'
+    def evaluate(ind)
+
+
+    #input: individuo para ser mutado, chance de mutação.
+    #output: novo individuo mutado
+    def mutation(ind)
+
+
+    def create_population():
+        pop = []
+        for i in range(pop_size):
+            pop.append(create_new_individual())
+        return pop
+
+    #input: population, numero max de geracoes.
+    #output: best individual (solution)
+    def reproduction():
+        # ordena os individuos
+        # Cria 4 mutacoes do mais apto.
+        # re-calcula o fitness
+        # passa pra proxima geração.
+    '''
+
+
+def main(args):
+    if args[1] == 'dataset':
+        print 'creating dataset...'
+        create_matrix_dist()
+        print 'dataset created! look at directory "dataset"'
+    else:
+        test()
+
+
+if __name__ == "__main__":
+    main(sys.argv)
