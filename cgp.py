@@ -279,6 +279,8 @@ def get_matrix_dist(valid_tree, num_leafs, lowest_weight=1, highest_weight=10):
     noise = np.tril(noise) + np.tril(noise, -1).T
     np.fill_diagonal(noise, 0)
     dist_matrix += noise
+    dist_matrix = dist_matrix.astype(int)
+
     print('------- noise --------')
     print(noise)
 
