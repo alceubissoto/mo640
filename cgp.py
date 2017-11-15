@@ -317,6 +317,15 @@ def create_matrix_dist(qty=1):
                 break
 
 
+# def plot_tree(valid_tree):
+#     from igraph import *
+#     g = Graph()
+#     g.add_vertices(3)
+#     g.add_edges([(0, 1), (1, 2)])
+#     layout = g.layout("kk")
+#     plot(g, layout=layout)
+
+
 def test():
     '''
     SANDBOX
@@ -371,6 +380,8 @@ def test():
     # print ("COUNT:", count)
     # print(isValidGraph(used))
 
+    #plot_tree(valid_tree)
+
     '''
     # input: individuo, matriz de distancias.
     # output: 'fitness'
@@ -399,7 +410,7 @@ def test():
 
 
 def main(args):
-    if args[1] == 'dataset':
+    if len(args) > 1 and args[1] == 'dataset':
         print('creating dataset...')
         create_matrix_dist()
         print('dataset created! look at directory "dataset"')
