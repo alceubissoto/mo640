@@ -8,7 +8,7 @@ import sys
 
 # Seria interessante receber os parametros antes da execucao
 ind_size = 100   # Size of every individual
-input_amount = 20 # Amount of inputs
+input_amount = 5 # Amount of inputs
 func_amount = 2  # Amount of functions STILL NEED TO DEFINE THESE
 pop_size = 5     # Population Size
 # Talvez as operacoes devessem ser já formatos de arvores (uniao de varios nos)..
@@ -273,12 +273,20 @@ def get_matrix_dist(valid_tree, num_leafs, lowest_weight=1, highest_weight=10):
     dist_matrix = dist_matrix[0:num_leafs, 0:num_leafs]
 
     # add gaussian noise
-    dist_matrix += np.rint(np.random.normal(0, 1, dist_matrix.shape))
+    noise = np.rint(np.random.normal(0, 1, dist_matrix.shape))
+    noise = np.tril(noise) + np.tril(noise, -1).T
+    np.fill_diagonal(noise, 0)
+    dist_matrix += noise
+    print('------- noise --------')
+    print(noise)
+
+    print('------- dist matrix ------')
+    print(dist_matrix)
 
     return dist_matrix
 
 
-def create_matrix_dist(qty=100):
+def create_matrix_dist(qty=1):
     '''
     Creates matrix distances in the quantity specified.
     Saves matrix distances as numpy files.
