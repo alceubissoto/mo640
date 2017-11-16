@@ -1,9 +1,15 @@
 # mo640
 
-## To generate dataset
-'''
-python cgp.py dataset
-'''
+## How to use
+ Create distance matrix: 
+```
+$ python cgp.py dataset
+```
+
+Run algorithm with input:
+```
+$ python cgp.py <path_input>'
+```
 
 ## Files generated
 - *.additive.npy - additive distance matrix in npy format
