@@ -212,7 +212,30 @@ def recursiveGetBinaryTree(cur, valid_graph, visited, valid_tree):
     return node_with_input_left if node_with_input_left >= 0 else node_with_input_right
 
 def findEdgeWeights(valid_tree, matrix):
-    print valid_tree, matrix
+    print valid_tree
+    print matrix
+    edges = set()
+    inputs = set(range(input_amount))
+
+    
+    # Find adjacent inputs in the tree
+    adjacent = 0, 1
+    for key, item in valid_tree.iteritems():
+        if item[0] < input_amount and item[1] < input_amount:
+            adjacent = item[0], item[1]
+            break
+    
+    for item in inputs:
+        if item not in adjacent:
+            c = item
+            break
+
+    a, b = adjacent
+
+    print a, b, c
+    ax = matrix[a,b] + matrix[a,c] - matrix[b, c]
+    bx = matrix[b,a] + matrix[b,c] - matrix[a, c]
+
 
 
 def mutation(ind): #STILL NEED TO BE ABLE TO MUTATE THE OUTPUT
