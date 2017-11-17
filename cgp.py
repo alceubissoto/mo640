@@ -8,7 +8,7 @@ import sys
 
 # Seria interessante receber os parametros antes da execucao
 ind_size = 100   # Size of every individual
-input_amount = 10 # Amount of inputs
+input_amount = 5 # Amount of inputs
 func_amount = 2  # Amount of functions STILL NEED TO DEFINE THESE
 pop_size = 5     # Population Size
 # Talvez as operacoes devessem ser já formatos de arvores (uniao de varios nos)..
@@ -214,27 +214,61 @@ def recursiveGetBinaryTree(cur, valid_graph, visited, valid_tree):
 def findEdgeWeights(valid_tree, matrix):
     print valid_tree
     print matrix
-    edges = set()
-    inputs = set(range(input_amount))
+    edges = dict()
 
-    
-    # Find adjacent inputs in the tree
-    adjacent = 0, 1
-    for key, item in valid_tree.iteritems():
-        if item[0] < input_amount and item[1] < input_amount:
-            adjacent = item[0], item[1]
-            break
-    
-    for item in inputs:
-        if item not in adjacent:
-            c = item
-            break
+    while matrix.shape[0] > 2:
 
-    a, b = adjacent
+        nodes = set(matrix[:, 0])
 
-    print a, b, c
-    ax = matrix[a,b] + matrix[a,c] - matrix[b, c]
-    bx = matrix[b,a] + matrix[b,c] - matrix[a, c]
+        # Find two adjacent nodes in set nodes
+        parent = None
+        adjacent = None
+        for key, item in valid_tree.iteritems():
+            if item[0] in nodes and item[1] in nodes:
+                parent = key
+                adjacent = item[0], item[1]
+                break
+        else:
+            'Error: No two adjacent nodes!'
+        
+        # Find another node in set of nodes, that is not adjacent to the first two
+        for node in nodes:
+            if node not in adjacent:
+                a, b = adjacent
+                c = node 
+                break
+
+        print a, b, c
+
+        # Find coordinates of a, b and c
+        row_a = list(matrix[:, 0]).index(a)
+        row_b = list(matrix[:, 0]).index(b)
+        row_c = list(matrix[:, 0]).index(c)
+        col_a = row_a + 1
+        col_b = row_b + 1
+        col_c = row_c + 1
+
+        # Compute the edge weight of the adjacent nodes to their parent
+        ap = max(0, matrix[row_a, col_b] + matrix[row_a,col_c] - matrix[row_b, col_c])
+        bp = max(0, matrix[row_b, col_a] + matrix[row_b,col_c] - matrix[row_a, col_c])
+        edges[(a, parent)] = ap
+        edges[(b, parent)] = bp
+
+        # Now replace the row and column of 'a' with its parent 
+        matrix[row_a, 0] = parent
+        matrix[row_a, 1:] = [max(0, dist - ap) for dist in matrix[row_a, 1:]]
+        matrix[:, col_a] = [max(0, dist - ap) for dist in matrix[:, col_a]]
+        # and remove the row and column of 'b'
+        matrix = np.delete(matrix, row_b, 0)
+        matrix = np.delete(matrix, col_b, 1)
+        print matrix
+
+
+    # Add distance between last nodes and remove root
+    nodes = set(matrix[:, 0])
+    edges[(matrix[0,0], matrix[1,0])] = matrix[0,1]
+    print edges
+
 
 
 
