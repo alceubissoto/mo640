@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from dataset import *
 import numpy as np
 import random
 import os
@@ -8,7 +8,7 @@ import sys
 
 # Seria interessante receber os parametros antes da execucao
 ind_size = 100   # Size of every individual
-input_amount = 5 # Amount of inputs
+input_amount = 10 # Amount of inputs
 func_amount = 2  # Amount of functions STILL NEED TO DEFINE THESE
 pop_size = 5     # Population Size
 # Talvez as operacoes devessem ser já formatos de arvores (uniao de varios nos)..
@@ -253,66 +253,6 @@ def mutation(ind): #STILL NEED TO BE ABLE TO MUTATE THE OUTPUT
     return ind
 
 
-def get_matrix_dist(valid_tree, num_leafs, lowest_weight=1, highest_weight=10):
-    '''
-    Based on a valid tree, create the additive matrix + some gaussian noise.
-    :param valid_tree:
-    :param num_leafs:
-    :param lowest_weight:
-    :param highest_weight:
-    :return:
-    '''
-    from scipy.sparse import csr_matrix
-    from scipy.sparse.csgraph import connected_components, dijkstra, shortest_path
-
-    row = []
-    col = []
-    for key, values in valid_tree.items():
-        row.append(key)
-        col.append(values[0])
-        row.append(key)
-        col.append(values[1])
-
-    # convert indexes
-    wgt = list(np.random.randint(lowest_weight, highest_weight, size=len(row)))
-
-    nodes = np.unique(row + col)
-    indices = np.argsort(nodes)
-    new_index =  dict(zip(nodes, indices))
-    row = map(lambda x: new_index[x], row)
-    col = map(lambda x: new_index[x], col)
-
-    print('------- nodes ------')
-    num_nodes = len(set(row + col))
-    print('num nodes = ' + str(num_nodes))
-
-    graph = csr_matrix((wgt, (np.array(row), np.array(col))), shape=(num_nodes, num_nodes))
-
-    print('------- edges ------')
-    print('*** Nodes from 0 to ' + str(num_leafs-1) + ' are the leaf nodes***')
-    print('   edge      weight')
-    print(graph)
-    dist_matrix = shortest_path(graph, directed = False)
-
-    # only the leaf nodes which are biological objects
-    dist_matrix = dist_matrix[0:num_leafs, 0:num_leafs]
-
-    # add gaussian noise
-    noise = np.rint(np.random.normal(0, 1, dist_matrix.shape))
-    noise = np.tril(noise) + np.tril(noise, -1).T
-    np.fill_diagonal(noise, 0)
-    dist_matrix += noise
-    dist_matrix = dist_matrix.astype(int)
-
-    print('------- noise --------')
-    print(noise)
-
-    print('------- dist matrix ------')
-    print(dist_matrix)
-
-    return dist_matrix
-
-
 def create_matrix_dist(qty=1):
     '''
     Creates matrix distances in the quantity specified.
@@ -334,23 +274,20 @@ def create_matrix_dist(qty=1):
             active_mut = active_nodes(mutated)
             if isValidGraph(active_mut):
                 valid_tree = getBinaryTree(active_mut)
-                dist_matrix = get_matrix_dist(valid_tree, input_amount)
+                dist_matrix, noisy_matrix, _, _, _ = get_matrix_dist(valid_tree, input_amount)
 
                 directory = 'dataset'
                 if not os.path.exists(directory):
                     os.makedirs(directory)
 
                 millis = int(round(time.time() * 1000))
-                np.save(os.path.join(directory, str(millis) + '.npy'), dist_matrix)
+                np.save(os.path.join(directory, str(millis) + '.additive.npy'), dist_matrix)
+                np.save(os.path.join(directory, str(millis) + '.noisy.npy'), noisy_matrix)
+                np.savetxt(os.path.join(directory, str(millis) + '.additive.txt'), dist_matrix, fmt='%d')
+                np.savetxt(os.path.join(directory, str(millis) + '.noisy.txt'), noisy_matrix, fmt='%d')
+                plot_tree(valid_tree, input_amount, os.path.join(directory, str(millis) + '.jpg'))
                 break
 
-# def plot_tree(valid_tree):
-#     from igraph import *
-#     g = Graph()
-#     g.add_vertices(3)
-#     g.add_edges([(0, 1), (1, 2)])
-#     layout = g.layout("kk")
-#     plot(g, layout=layout)
 
 def test(matrix):
     '''
