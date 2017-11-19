@@ -82,6 +82,8 @@ def plot_tree(valid_tree, input_amount, filename):
     '''
     import networkx as nx
     import matplotlib.pyplot as plt
+    import matplotlib
+    matplotlib.use('Agg')
 
     G = nx.Graph()
     _, _, row, col, wgt = get_matrix_dist(valid_tree, input_amount)
