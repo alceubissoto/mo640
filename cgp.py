@@ -5,10 +5,11 @@ import random
 import os
 import time
 import sys
+from __future__ import print_function
 
 # Seria interessante receber os parametros antes da execucao
 ind_size = 100   # Size of every individual
-input_amount = 5 # Amount of inputs
+input_amount = 20 # Amount of inputs
 func_amount = 2  # Amount of functions STILL NEED TO DEFINE THESE
 pop_size = 5     # Population Size
 # Talvez as operacoes devessem ser já formatos de arvores (uniao de varios nos)..
@@ -41,7 +42,7 @@ def active_nodes(ind):
     evaluated = list(range(0, input_amount))
     used_nodes = {}
     inicial_position = input_amount
-    while(len(to_eval)>0):
+    while(len(to_eval) > 0):
         if(to_eval[0] in evaluated):
             to_eval.pop(0)
         else:
@@ -158,7 +159,7 @@ def fill_individual(ind):
     return new_ind
 
 
-def isValidGraph(active):
+def is_valid_graph(active):
     count = 0
     for _, value in active.items():
         for i in range(len(value)-1):
@@ -170,7 +171,7 @@ def isValidGraph(active):
         return False
 
 
-def getBinaryTree(valid_graph):
+def get_binary_tree(valid_graph):
     root = max(valid_graph.keys())
     # set input in order 
     input_number = 0
@@ -186,11 +187,11 @@ def getBinaryTree(valid_graph):
     valid_tree = dict()
 
     # build binary tree, assumes that tree has at least 2 inputs
-    recursiveGetBinaryTree(root, valid_graph, visited, valid_tree)
+    recursive_get_binary_tree(root, valid_graph, visited, valid_tree)
     return valid_tree
 
 
-def recursiveGetBinaryTree(cur, valid_graph, visited, valid_tree):
+def recursive_get_binary_tree(cur, valid_graph, visited, valid_tree):
     if cur in visited:
         return -1 
 
@@ -202,8 +203,8 @@ def recursiveGetBinaryTree(cur, valid_graph, visited, valid_tree):
 
     left = valid_graph[cur][0]
     right = valid_graph[cur][1]
-    node_with_input_left = recursiveGetBinaryTree(left, valid_graph, visited, valid_tree)
-    node_with_input_right = recursiveGetBinaryTree(right, valid_graph, visited, valid_tree)
+    node_with_input_left = recursive_get_binary_tree(left, valid_graph, visited, valid_tree)
+    node_with_input_right = recursive_get_binary_tree(right, valid_graph, visited, valid_tree)
 
     if node_with_input_left >= 0 and node_with_input_right >= 0:
         valid_tree[cur] = [node_with_input_left, node_with_input_right]
@@ -211,9 +212,9 @@ def recursiveGetBinaryTree(cur, valid_graph, visited, valid_tree):
 
     return node_with_input_left if node_with_input_left >= 0 else node_with_input_right
 
-def findEdgeWeights(valid_tree, matrix):
-    print valid_tree
-    print matrix
+def find_edge_weights(valid_tree, matrix):
+    print(valid_tree)
+    print(matrix)
     edges = dict()
 
     while matrix.shape[0] > 2:
@@ -238,7 +239,7 @@ def findEdgeWeights(valid_tree, matrix):
                 c = node 
                 break
 
-        print a, b, c
+        print(a, b, c)
 
         # Find coordinates of a, b and c
         row_a = list(matrix[:, 0]).index(a)
@@ -261,15 +262,13 @@ def findEdgeWeights(valid_tree, matrix):
         # and remove the row and column of 'b'
         matrix = np.delete(matrix, row_b, 0)
         matrix = np.delete(matrix, col_b, 1)
-        print matrix
+        print(matrix)
 
 
     # Add distance between last nodes and remove root
     nodes = set(matrix[:, 0])
     edges[(matrix[0,0], matrix[1,0])] = matrix[0,1]
-    print edges
-
-
+    print(edges)
 
 
 def mutation(ind): #STILL NEED TO BE ABLE TO MUTATE THE OUTPUT
@@ -306,8 +305,8 @@ def create_matrix_dist(qty=1):
         while True:
             mutated = mutation(mutated)
             active_mut = active_nodes(mutated)
-            if isValidGraph(active_mut):
-                valid_tree = getBinaryTree(active_mut)
+            if is_valid_graph(active_mut):
+                valid_tree = get_binary_tree(active_mut)
                 dist_matrix, noisy_matrix, _, _, _ = get_matrix_dist(valid_tree, input_amount)
 
                 directory = 'dataset'
@@ -330,58 +329,26 @@ def test(matrix):
     :return:
     '''
 
-    '''
-        a     b     c     d     e
-    a   0    12    12    12    12
-    b   12    0     4     6     6
-    c   12    4     0     6     6
-    d   12    6     6     0     2
-    e   12    6     6     2     0
-
-    matrix[1][0] = 12
-
-    matrix = np.array([[0, 0, 12, 12, 12, 12],
-                       [1, 12, 0, 4, 6, 6],
-                       [2, 12, 4, 0, 6, 6],
-                       [3, 12, 6, 6, 0, 2],
-                       [4, 12, 6, 6, 2, 0]])
-    '''
-
     matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), matrix))
     new_ind = upgma(matrix)
     mutated = mutation(new_ind)
 
-    # experiment = []
-    # for i in range(10000):
     count = 0
     while True:
         mutated = mutation(mutated)
-        # print(new_ind)
         active_mut = active_nodes(mutated)
-        # print(mutated)
-        # print(active_mut)
         count = count + 1
-        # print("COUNT:", count)
-        if (isValidGraph(active_mut)):
+        if is_valid_graph(active_mut):
             break
-    # experiment.append(count)
-    #    print(i)
+
     print('----------------- active mut ---------------------')
     print(active_mut)
 
     print('----------------- valid tree ---------------------')
-    valid_tree = getBinaryTree(active_mut)
+    valid_tree = get_binary_tree(active_mut)
     print(valid_tree)
 
-    findEdgeWeights(valid_tree, matrix)
-    # experiment = np.array(experiment)
-    # print("MEAN:", np.mean(experiment))
-    # print("STD:", np.std(experiment))
-
-    # print ("COUNT:", count)
-    # print(isValidGraph(used))
-
-    #plot_tree(valid_tree)
+    find_edge_weights(valid_tree, matrix)
 
     '''
     # input: individuo, matriz de distancias.
@@ -418,16 +385,16 @@ def main(args):
             print('dataset created! look at directory "dataset"')
         else:
             dist_matrix = np.load(args[1])
-            print dist_matrix
+            print(dist_matrix)
             test(dist_matrix)
     else:
-        print '''Usage:
+        print('''Usage:
                  Create distance matrix: 
                     $ python cgp.py dataset
                  
                  Run algorithm with input:
                     $ python cgp.py <path_input>'
-                    '''
+                    ''')
 
 
 if __name__ == "__main__":

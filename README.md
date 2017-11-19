@@ -18,4 +18,21 @@ $ python cgp.py <path_input>'
 applied
 - *.noisy.txt - same as noisy.npy but in human readable format
 - *.jpg - graph chart
-- *.spring.jpg - same as above but in a layout that might be better
+
+## Seed matrix used
+```
+    a     b     c     d     e
+a   0    12    12    12    12
+b   12    0     4     6     6
+c   12    4     0     6     6
+d   12    6     6     0     2
+e   12    6     6     2     0
+
+matrix[1][0] = 12
+
+matrix = np.array([[0, 0, 12, 12, 12, 12],
+                   [1, 12, 0, 4, 6, 6],
+                   [2, 12, 4, 0, 6, 6],
+                   [3, 12, 6, 6, 0, 2],
+                   [4, 12, 6, 6, 2, 0]])
+```
