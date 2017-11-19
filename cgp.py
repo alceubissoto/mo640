@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from dataset import *
 import numpy as np
 import random
 import os
 import time
 import sys
-from __future__ import print_function
 
 # Seria interessante receber os parametros antes da execucao
 ind_size = 100   # Size of every individual
