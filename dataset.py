@@ -3,26 +3,78 @@ import random
 import os
 import time
 import sys
+from scipy.sparse import csr_matrix
+from scipy.sparse.csgraph import connected_components, dijkstra, shortest_path
 
-def get_edges(valid_tree):
-    row = []
-    col = []
+def get_edges_from_valid_tree(valid_tree):
+    nodes_edge_right = []
+    nodes_edge_left = []
     for key, values in valid_tree.items():
-        row.append(key)
-        col.append(values[0])
-        row.append(key)
-        col.append(values[1])
+        nodes_edge_right.append(key)
+        nodes_edge_left.append(values[0])
+        nodes_edge_right.append(key)
+        nodes_edge_left.append(values[1])
 
-    nodes = np.unique(row + col)
+    nodes = np.unique(nodes_edge_right + nodes_edge_left)
     indices = np.argsort(nodes)
     new_index =  dict(zip(nodes, indices))
-    row = [new_index[x] for x in row]
-    col = [new_index[x] for x in col]
+    nodes_edge_right = [new_index[x] for x in nodes_edge_right]
+    nodes_edge_left = [new_index[x] for x in nodes_edge_left]
 
-    return row, col
+    return nodes_edge_right, nodes_edge_left
+
+def get_edges_from_weighted_edges(edges):
+    '''
+    Convert format of map[(node1, node2)]->weight to 3 separate lists:
+    nodes_edge_right+nodes_edge_left - represent the edges
+    edge_weights = the weights for each edge (this matches with the index in
+    nodes_edge_right and nodes_edge_left)
+    This function also normalizes the node labels to be in sorted order
+    '''
+    nodes_edge_right = []
+    nodes_edge_left = []
+    edge_weights = []
+    for key, value in edges.items():
+        nodes_edge_right.append(key[0])
+        nodes_edge_left.append(key[1])
+        edge_weights.append(value)
+
+    nodes = np.unique(nodes_edge_right + nodes_edge_left)
+    indices = np.argsort(nodes)
+    new_index = dict(zip(nodes, indices))
+    nodes_edge_right = [new_index[x] for x in nodes_edge_right]
+    nodes_edge_left = [new_index[x] for x in nodes_edge_left]
+
+    return nodes_edge_right, nodes_edge_left, edge_weights
 
 
-def get_matrix_dist(valid_tree, num_leafs, lowest_weight=1, highest_weight=10):
+def get_matrix_dist_from_weighted_edges(edges, k):
+    '''
+    Returns distance matrix size (k,k)
+    :param edges: map[(node1, node2)]->weight
+    :param k: number of biological objects
+    :return: distance matrix size (k,k)
+    '''
+    nodes_edge_right, nodes_edge_left, edge_weights = get_edges_from_weighted_edges(edges)
+    dist_matrix = get_matrix_dist(nodes_edge_right, nodes_edge_left, edge_weights)
+    dist_matrix = dist_matrix[0:k, 0:k]
+    return dist_matrix
+
+
+def get_matrix_dist(nodes_edge_right, nodes_edge_left, edge_weights):
+    '''
+    Calculate distance matrix
+    :param weighted_edges: tuples of (n1, n2, w) where n1 and n2 are nodes
+    and w is the weight of the edge between those nodes
+    :return: return a distance matrix in numpy format
+    '''
+    num_nodes = len(set(nodes_edge_right + nodes_edge_left))
+    graph = csr_matrix((edge_weights, (np.array(nodes_edge_right), np.array(nodes_edge_left))), shape=(num_nodes, num_nodes))
+    dist_matrix = shortest_path(graph, directed=False)
+    return dist_matrix
+
+
+def create_artificial_matrix_dist(valid_tree, num_leafs, lowest_weight=1, highest_weight=10):
     '''
     Based on a valid tree, create the additive matrix + some gaussian noise.
     :param valid_tree: dictionary where keys are nodes and the value
@@ -31,25 +83,10 @@ def get_matrix_dist(valid_tree, num_leafs, lowest_weight=1, highest_weight=10):
     :param highest_weight:
     :return:
     '''
-    from scipy.sparse import csr_matrix
-    from scipy.sparse.csgraph import connected_components, dijkstra, shortest_path
-
-    row, col = get_edges(valid_tree)
-
-    # convert indexes
-    wgt = np.random.randint(lowest_weight, highest_weight, size=len(row))
-
-    print('------- nodes ------')
-    num_nodes = len(set(row + col))
-    print('num nodes = ' + str(num_nodes))
-
-    graph = csr_matrix((wgt, (np.array(row), np.array(col))), shape=(num_nodes, num_nodes))
-
-    print('------- edges ------')
-    print('*** Nodes from 0 to ' + str(num_leafs-1) + ' are the leaf nodes***')
-    print('   edge      weight')
-    print(graph)
-    dist_matrix = shortest_path(graph, directed = False)
+    # create distance matrix with random weights
+    nodes_edge_right, nodes_edge_left = get_edges_from_valid_tree(valid_tree)
+    edge_weights = np.random.randint(lowest_weight, highest_weight, size=len(nodes_edge_right))
+    dist_matrix = get_matrix_dist(nodes_edge_right, nodes_edge_left, edge_weights)
 
     # only the leaf nodes which are biological objects
     dist_matrix = dist_matrix[0:num_leafs, 0:num_leafs]
@@ -62,13 +99,7 @@ def get_matrix_dist(valid_tree, num_leafs, lowest_weight=1, highest_weight=10):
     dist_matrix = dist_matrix.astype(int)
     noisy_matrix = noisy_matrix.astype(int)
 
-    print('------- noisy matrix --------')
-    print(noisy_matrix)
-
-    print('------- dist matrix ------')
-    print(dist_matrix)
-
-    return dist_matrix, noisy_matrix, row, col, wgt
+    return dist_matrix, noisy_matrix, nodes_edge_right, nodes_edge_left, edge_weights
 
 
 def plot_tree(valid_tree, input_amount, filename):
@@ -80,11 +111,14 @@ def plot_tree(valid_tree, input_amount, filename):
     :param filename: 
     :return: 
     '''
+    import matplotlib
+    matplotlib.use('Agg')
     import networkx as nx
     import matplotlib.pyplot as plt
 
+
     G = nx.Graph()
-    _, _, row, col, wgt = get_matrix_dist(valid_tree, input_amount)
+    _, _, row, col, wgt = create_artificial_matrix_dist(valid_tree, input_amount)
     G.add_nodes_from(np.unique(row + col))
     G.add_weighted_edges_from(zip(row, col, wgt))
     pos = nx.spring_layout(G, k=0.35, iterations=50, scale=2)

@@ -19,6 +19,18 @@ applied
 - *.noisy.txt - same as noisy.npy but in human readable format
 - *.jpg - graph chart
 
+## Strategy 1
+- input: non-additive matrix
+- create mutated tree
+- add weights to the tree
+- calculate fitness
+- go back to step 2
+
+## Strategy 2
+- non-additive matrix
+
+ 
+
 ## Seed matrix used
 ```
     a     b     c     d     e

@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-from dataset import *
+from dataset import get_matrix_dist_from_weighted_edges, create_artificial_matrix_dist, plot_tree
 import numpy as np
 import random
 import os
 import time
 import sys
+import argparse
 
 # Seria interessante receber os parametros antes da execucao
 ind_size = 100   # Size of every individual
@@ -224,7 +225,7 @@ def find_edge_weights(valid_tree, matrix):
         # Find two adjacent nodes in set nodes
         parent = None
         adjacent = None
-        for key, item in valid_tree.iteritems():
+        for key, item in valid_tree.items():
             if item[0] in nodes and item[1] in nodes:
                 parent = key
                 adjacent = item[0], item[1]
@@ -262,13 +263,16 @@ def find_edge_weights(valid_tree, matrix):
         # and remove the row and column of 'b'
         matrix = np.delete(matrix, row_b, 0)
         matrix = np.delete(matrix, col_b, 1)
-        print(matrix)
+        #print(matrix)
 
 
     # Add distance between last nodes and remove root
     nodes = set(matrix[:, 0])
     edges[(matrix[0,0], matrix[1,0])] = matrix[0,1]
     print(edges)
+
+    # format: key (edge1, edge2) and value (weight)
+    return edges
 
 
 def mutation(ind): #STILL NEED TO BE ABLE TO MUTATE THE OUTPUT
@@ -286,7 +290,7 @@ def mutation(ind): #STILL NEED TO BE ABLE TO MUTATE THE OUTPUT
     return ind
 
 
-def create_matrix_dist(qty=1):
+def create_matrix_dist(out_data, qty=10):
     '''
     Creates matrix distances in the quantity specified.
     Saves matrix distances as numpy files.
@@ -307,31 +311,25 @@ def create_matrix_dist(qty=1):
             active_mut = active_nodes(mutated)
             if is_valid_graph(active_mut):
                 valid_tree = get_binary_tree(active_mut)
-                dist_matrix, noisy_matrix, _, _, _ = get_matrix_dist(valid_tree, input_amount)
+                dist_matrix, noisy_matrix, _, _, _ = create_artificial_matrix_dist(valid_tree, input_amount)
 
-                directory = 'dataset'
-                if not os.path.exists(directory):
-                    os.makedirs(directory)
+                if not os.path.exists(out_data):
+                    os.makedirs(out_data)
 
                 millis = int(round(time.time() * 1000))
-                np.save(os.path.join(directory, str(millis) + '.additive.npy'), dist_matrix)
-                np.save(os.path.join(directory, str(millis) + '.noisy.npy'), noisy_matrix)
-                np.savetxt(os.path.join(directory, str(millis) + '.additive.txt'), dist_matrix, fmt='%d')
-                np.savetxt(os.path.join(directory, str(millis) + '.noisy.txt'), noisy_matrix, fmt='%d')
-                plot_tree(valid_tree, input_amount, os.path.join(directory, str(millis) + '.jpg'))
+                np.save(os.path.join(out_data, str(millis) + '.additive.npy'), dist_matrix)
+                np.save(os.path.join(out_data, str(millis) + '.noisy.npy'), noisy_matrix)
+                np.savetxt(os.path.join(out_data, str(millis) + '.additive.txt'), dist_matrix, fmt='%d')
+                np.savetxt(os.path.join(out_data, str(millis) + '.noisy.txt'), noisy_matrix, fmt='%d')
+                plot_tree(valid_tree, input_amount, os.path.join(out_data, str(millis) + '.jpg'))
                 break
 
 
-def test(matrix):
-    '''
-    SANDBOX
-    For everyone to play around
-    :return:
-    '''
-
-    matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), matrix))
-    new_ind = upgma(matrix)
-    mutated = mutation(new_ind)
+def test_topology_mutation(dataset_matrix):
+    k = dataset_matrix.shape[0] # number of biological objects
+    indexed_matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), dataset_matrix))
+    upgma_individual = upgma(indexed_matrix)
+    mutated = mutation(upgma_individual)
 
     count = 0
     while True:
@@ -341,61 +339,56 @@ def test(matrix):
         if is_valid_graph(active_mut):
             break
 
-    print('----------------- active mut ---------------------')
-    print(active_mut)
-
-    print('----------------- valid tree ---------------------')
     valid_tree = get_binary_tree(active_mut)
-    print(valid_tree)
-
-    find_edge_weights(valid_tree, matrix)
-
-    '''
-    # input: individuo, matriz de distancias.
-    # output: 'fitness'
-    def evaluate(ind)
+    edges = find_edge_weights(valid_tree, indexed_matrix)
+    dist_matrix = get_matrix_dist_from_weighted_edges(edges, k)
+    fitness = get_fitness(dist_matrix, dataset_matrix)
+    print('**** fitness = ' + str(fitness))
+    return fitness
 
 
-    #input: individuo para ser mutado, chance de mutação.
-    #output: novo individuo mutado
-    def mutation(ind)
+def get_fitness(dist_matrix1, dist_matrix2):
+    return np.square(dist_matrix1 - dist_matrix2).sum()
 
 
-    def create_population():
-        pop = []
-        for i in range(pop_size):
-            pop.append(create_new_individual())
-        return pop
+def run_tests(directory_path):
+    results = dict()
+    directory = os.fsencode(directory_path)
 
-    #input: population, numero max de geracoes.
-    #output: best individual (solution)
-    def reproduction():
-        # ordena os individuos
-        # Cria 4 mutacoes do mais apto.
-        # re-calcula o fitness
-        # passa pra proxima geração.
-    '''
+    for file in os.listdir(directory):
+        filename = os.fsdecode(file)
+        if filename.endswith("noisy.npy"):
+            dist_matrix = np.load(os.path.join(directory_path, filename))
+            fitness_score = test_topology_mutation(dist_matrix)
+            results[filename] = fitness_score
+
+    print(results)
+    print('####################################')
+    print('            TEST RESULTS            ')
+    print('####################################')
+    print('Sample\t\t\t\tScore')
+    for sample, score in results.items():
+        print(sample + '\t\t' + str(score))
 
 
 def main(args):
-    if len(args) > 1:
-        if args[1] == 'dataset':
-            print('creating dataset...')
-            create_matrix_dist()
-            print('dataset created! look at directory "dataset"')
-        else:
-            dist_matrix = np.load(args[1])
-            print(dist_matrix)
-            test(dist_matrix)
+    print(args)
+    if args.out_data is not None:
+        print('Creating dataset...')
+        create_matrix_dist(args.out_data)
+        print('Dataset written to directory: ' + args.out_data)
+    elif args.in_data is not None:
+        run_tests(args.in_data)
+
     else:
-        print('''Usage:
-                 Create distance matrix: 
-                    $ python cgp.py dataset
-                 
-                 Run algorithm with input:
-                    $ python cgp.py <path_input>'
-                    ''')
+        print('Usage: python cgp.py [--create-dataset] [--input=<path to directory with source data>]')
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    parser = argparse.ArgumentParser(description='Genetic algorithms to create phylogenetic trees.')
+    parser.add_argument('--out-data', help='creates dataset')
+    parser.add_argument('--in-data', help='runs genetic algorithms using source data')
+    args = parser.parse_args()
+    main(args)
+
+
