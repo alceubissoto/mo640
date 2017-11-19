@@ -16,8 +16,8 @@ def get_edges(valid_tree):
     nodes = np.unique(row + col)
     indices = np.argsort(nodes)
     new_index =  dict(zip(nodes, indices))
-    row = map(lambda x: new_index[x], row)
-    col = map(lambda x: new_index[x], col)
+    row = [new_index[x] for x in row]
+    col = [new_index[x] for x in col]
 
     return row, col
 
@@ -71,8 +71,6 @@ def get_matrix_dist(valid_tree, num_leafs, lowest_weight=1, highest_weight=10):
     return dist_matrix, noisy_matrix, row, col, wgt
 
 
-
-
 def plot_tree(valid_tree, input_amount, filename):
     '''
     Given a valid tree, it will plot a graph image
@@ -89,14 +87,15 @@ def plot_tree(valid_tree, input_amount, filename):
     _, _, row, col, wgt = get_matrix_dist(valid_tree, input_amount)
     G.add_nodes_from(np.unique(row + col))
     G.add_weighted_edges_from(zip(row, col, wgt))
+    pos = nx.spring_layout(G, k=0.35, iterations=50, scale=2)
 
-    'save using the standard layout by networkx (sometimes not so readable but' \
-    'can be better than spring sometimes)'
-    nx.draw(G, with_labels=True, node_color='lightblue', node_size=450, font_size=11)
+
+    edge_labels = dict([((u, v,), d['weight'])
+                        for u, v, d in G.edges(data=True)])
+    nx.draw(G, pos=pos, with_labels=True, node_color='lightblue', node_size=250, font_size=6)
+    nx.draw_networkx_edge_labels(G, edge_labels=edge_labels, pos=pos, font_size=6)
     plt.savefig(filename)
     plt.gcf().clear()
 
-    'save using spring layout (this seems to be more readable)'
-    nx.draw_spring(G, with_labels=True, node_color='lightblue', node_size=450, font_size=11)
-    plt.savefig(filename.replace('.jpg','.spring.jpg'))
-    plt.gcf().clear()
+    #from networkx.drawing.nx_agraph import write_dot
+    #write_dot(G, 'edgar.dot')
