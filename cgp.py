@@ -372,14 +372,12 @@ def run_tests(directory_path):
 
 
 def main(args):
-    print(args)
     if args.out_data is not None:
         print('Creating dataset...')
         create_matrix_dist(args.out_data)
         print('Dataset written to directory: ' + args.out_data)
     elif args.in_data is not None:
         run_tests(args.in_data)
-
     else:
         print('Usage: python cgp.py [--create-dataset] [--input=<path to directory with source data>]')
 
