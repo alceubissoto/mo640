@@ -7,6 +7,8 @@ import os
 import time
 import sys
 import argparse
+import copy
+#import weight_cgp
 
 # Seria interessante receber os parametros antes da execucao
 ind_size = 100   # Size of every individual
@@ -61,12 +63,17 @@ def active_nodes(ind):
 def upgma(matrix):
     new_ind = {}
     new_ind['genotype'] = []
-    min_value = 10000 # infinito positivo
+    min_value = 10000 # positive infinite
     updt_mtx = matrix
     next_node = input_amount
 
+    # initialize heights
+    heights = {}
+    for i in range(input_amount):
+        heights[i] = 0
+
     while (updt_mtx.shape[0] > 1):
-        min_value = 10000 # infinito positivo
+        min_value = 10000 # positive infinite
         # Search for the closest objects
 
         for row in range(updt_mtx.shape[0]):
@@ -81,6 +88,9 @@ def upgma(matrix):
                     C2_column = row+1
                     C1 = updt_mtx[row, :]
                     C2 = updt_mtx[column-1, :]
+
+        # Evaluate height of the new node
+        heights[next_node] = min_value/2
 
         # Delete the rows and columns with respect to the selected objects
         if C1_column > C2_column:
@@ -125,9 +135,33 @@ def upgma(matrix):
         next_node = next_node + 1
 
     new_ind['output'] = next_node -1
-    new_ind = fill_individual(new_ind)
+    #new_ind = fill_individual(new_ind)
 
-    return new_ind
+    return heights, new_ind
+
+#
+def evaluate_upgma_matrix(actv, heights):
+    matrix = np.zeros((input_amount, input_amount))
+    evaluated = {}
+    #print(actv)
+    #print(heights)
+    for i in range(input_amount):
+        evaluated[i] = [i]
+
+    for item in sorted(actv.items()):
+        evaluated[item[0]] = []
+        evaluated[item[0]].extend(evaluated[item[1][0]])
+        evaluated[item[0]].extend(evaluated[item[1][1]])
+
+        for obj in evaluated[item[0]]:
+            for obj_2 in evaluated[item[0]]:
+                #print("ITEM[0]:", item[0])
+                #print("HEIGHTS:", heights)
+                if (obj != obj_2) and matrix[obj, obj_2] == 0:
+                    matrix[obj, obj_2] = heights[item[0]]*2
+
+    return np.array(matrix)
+
 
 
 def fill_individual(ind):
@@ -174,7 +208,7 @@ def is_valid_graph(active):
 
 def get_binary_tree(valid_graph):
     root = max(valid_graph.keys())
-    # set input in order 
+    # set input in order
     input_number = 0
     for key, values in valid_graph.items():
         if values[0] < input_amount:
@@ -183,7 +217,7 @@ def get_binary_tree(valid_graph):
         if values[1] < input_amount:
             values[1] = input_number
             input_number += 1
-    
+
     visited = set()
     valid_tree = dict()
 
@@ -194,7 +228,7 @@ def get_binary_tree(valid_graph):
 
 def recursive_get_binary_tree(cur, valid_graph, visited, valid_tree):
     if cur in visited:
-        return -1 
+        return -1
 
     visited.add(cur)
 
@@ -214,8 +248,8 @@ def recursive_get_binary_tree(cur, valid_graph, visited, valid_tree):
     return node_with_input_left if node_with_input_left >= 0 else node_with_input_right
 
 def find_edge_weights(valid_tree, matrix):
-    print(valid_tree)
-    print(matrix)
+    #print(valid_tree)
+    #print(matrix)
     edges = dict()
 
     while matrix.shape[0] > 2:
@@ -232,15 +266,15 @@ def find_edge_weights(valid_tree, matrix):
                 break
         else:
             'Error: No two adjacent nodes!'
-        
+
         # Find another node in set of nodes, that is not adjacent to the first two
         for node in nodes:
             if node not in adjacent:
                 a, b = adjacent
-                c = node 
+                c = node
                 break
 
-        print(a, b, c)
+        #print(a, b, c)
 
         # Find coordinates of a, b and c
         row_a = list(matrix[:, 0]).index(a)
@@ -256,7 +290,7 @@ def find_edge_weights(valid_tree, matrix):
         edges[(a, parent)] = ap
         edges[(b, parent)] = bp
 
-        # Now replace the row and column of 'a' with its parent 
+        # Now replace the row and column of 'a' with its parent
         matrix[row_a, 0] = parent
         matrix[row_a, 1:] = [max(0, dist - ap) for dist in matrix[row_a, 1:]]
         matrix[:, col_a] = [max(0, dist - ap) for dist in matrix[:, col_a]]
@@ -269,15 +303,15 @@ def find_edge_weights(valid_tree, matrix):
     # Add distance between last nodes and remove root
     nodes = set(matrix[:, 0])
     edges[(matrix[0,0], matrix[1,0])] = matrix[0,1]
-    print(edges)
+    #print(edges)
 
     # format: key (edge1, edge2) and value (weight)
     return edges
 
 
 def mutation(ind): #STILL NEED TO BE ABLE TO MUTATE THE OUTPUT
-    gen = ind['genotype']
-    out = ind['output']
+    gen = copy.deepcopy(ind['genotype'])
+    out = copy.deepcopy(ind['output'])
     #print(gen)
     used = active_nodes(ind)
     #print(used)
@@ -287,7 +321,7 @@ def mutation(ind): #STILL NEED TO BE ABLE TO MUTATE THE OUTPUT
     chosen_item = random.randint(0,1)
     #print(chosen_item)
     ind['genotype'][(key[0]-input_amount)*3+chosen_item] = random.randint(0, key[0]-1)
-    return ind
+    return copy.deepcopy(ind)
 
 
 def create_matrix_dist(out_data, qty=10):
@@ -303,7 +337,7 @@ def create_matrix_dist(out_data, qty=10):
                        [2, 12, 4, 0, 6, 6],
                        [3, 12, 6, 6, 0, 2],
                        [4, 12, 6, 6, 2, 0]])
-    new_ind = upgma(matrix)
+    _, new_ind = upgma(matrix)
     mutated = mutation(new_ind)
     for i in range(qty):
         while True:
@@ -328,7 +362,7 @@ def create_matrix_dist(out_data, qty=10):
 def test_topology_mutation(dataset_matrix):
     k = dataset_matrix.shape[0] # number of biological objects
     indexed_matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), dataset_matrix))
-    upgma_individual = upgma(indexed_matrix)
+    _, upgma_individual = upgma(indexed_matrix)
     mutated = mutation(upgma_individual)
 
     count = 0
@@ -346,21 +380,96 @@ def test_topology_mutation(dataset_matrix):
     print('**** fitness = ' + str(fitness))
     return fitness
 
+def test_upgma_fitness(dataset_matrix):
+    k = dataset_matrix.shape[0] # number of biological objects
+    indexed_matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), dataset_matrix))
+    heights, upgma_tree = upgma(indexed_matrix)
+    upgma_individual = fill_individual(upgma_tree)
+    actv = active_nodes(upgma_tree)
+    upgma_matrix = evaluate_upgma_matrix(actv, heights)
+    print("UPGMA MATRIX:", upgma_matrix)
+    fitness = get_fitness(upgma_matrix, dataset_matrix)
+    return fitness, upgma_individual
 
 def get_fitness(dist_matrix1, dist_matrix2):
     return np.square(dist_matrix1 - dist_matrix2).sum()
 
+def evaluate(individual, dataset_matrix):
+    k = dataset_matrix.shape[0] # number of biological objects
+    indexed_matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), dataset_matrix))
+    valid_tree = get_binary_tree(active_nodes(individual))
+    edges = find_edge_weights(valid_tree, indexed_matrix)
+    dist_matrix = get_matrix_dist_from_weighted_edges(edges, k)
+    fitness = get_fitness(dist_matrix, dataset_matrix)
+    #print('**** fitness = ' + str(fitness))
+    return fitness
+
+def valid_mutation(individual):
+    count = 0
+    while True:
+        mutated = mutation(individual)
+        active_mut = active_nodes(mutated)
+        count = count + 1
+        if is_valid_graph(active_mut):
+            break
+    #print("count:", count)
+    return mutated
 
 def run_tests(directory_path):
     results = dict()
     directory = os.fsencode(directory_path)
-
+    population = []
     for file in os.listdir(directory):
         filename = os.fsdecode(file)
         if filename.endswith("noisy.npy"):
-            dist_matrix = np.load(os.path.join(directory_path, filename))
-            fitness_score = test_topology_mutation(dist_matrix)
-            results[filename] = fitness_score
+            dataset_matrix = np.load(os.path.join(directory_path, filename))
+
+            # Evaluate initial fitness
+            #fitness_score = test_topology_mutation(upgma_individual)
+            fitness_upgma, upgma_individual = test_upgma_fitness(dataset_matrix)
+            fitness_score = evaluate(upgma_individual, dataset_matrix)
+            results['initial_'+filename] = fitness_score
+            results['initial_upgma'+filename] = fitness_upgma
+            upgma_individual['fitness'] = fitness_score
+
+            # Add UPGMA individual to population
+            population.append(upgma_individual)
+            best_fitness = fitness_score
+
+            # Reproduction
+            for iteration in range(100):
+                # Mutation procedure
+                for i in range(pop_size-1):
+                    mut = valid_mutation(population[0])
+                    mut['fitness'] = evaluate(mut, dataset_matrix)
+                    population.append(mut)
+
+                for i in range(pop_size):
+                    if(population[i]['fitness'] < best_fitness):
+                        best_fitness = population[i]['fitness']
+
+                # Keep only the best individual for the next generation
+                print("BEST FITNESS:", best_fitness)
+                print("ITERATION:", iteration)
+                #print("POP SIZE:", len(population))
+                for i in range(pop_size):
+                    if population[i]['fitness'] == best_fitness:
+                        tmp = []
+                        tmp.append(population[i])
+                        break
+                population = tmp
+
+            assert(population[0]['fitness']==best_fitness)
+            results['final_'+filename] = population[0]['fitness']
+            print("FINAL: ", population[0])
+            k = dataset_matrix.shape[0] # number of biological objects
+            indexed_matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), dataset_matrix))
+            valid_tree = get_binary_tree(active_nodes(population[0]))
+            edges = find_edge_weights(valid_tree, indexed_matrix)
+            dist_matrix = get_matrix_dist_from_weighted_edges(edges, k)
+            print("MATRIX:", dist_matrix)
+
+
 
     print(results)
     print('####################################')
@@ -388,5 +497,3 @@ if __name__ == "__main__":
     parser.add_argument('--in-data', help='runs genetic algorithms using source data')
     args = parser.parse_args()
     main(args)
-
-
