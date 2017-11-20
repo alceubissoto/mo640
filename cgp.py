@@ -310,18 +310,17 @@ def find_edge_weights(valid_tree, matrix):
 
 
 def mutation(ind): #STILL NEED TO BE ABLE TO MUTATE THE OUTPUT
-    gen = copy.deepcopy(ind['genotype'])
-    out = copy.deepcopy(ind['output'])
+    gen = copy.deepcopy(ind)
     #print(gen)
-    used = active_nodes(ind)
+    used = active_nodes(gen)
     #print(used)
     used_list = list(used.items())
     key = random.choice(used_list)
     #print(key)
     chosen_item = random.randint(0,1)
     #print(chosen_item)
-    ind['genotype'][(key[0]-input_amount)*3+chosen_item] = random.randint(0, key[0]-1)
-    return copy.deepcopy(ind)
+    gen['genotype'][(key[0]-input_amount)*3+chosen_item] = random.randint(0, key[0]-1)
+    return gen
 
 
 def create_matrix_dist(out_data, qty=10):
@@ -412,7 +411,7 @@ def valid_mutation(individual):
         count = count + 1
         if is_valid_graph(active_mut):
             break
-    #print("count:", count)
+    print("count:", count)
     return mutated
 
 def run_tests(directory_path):
