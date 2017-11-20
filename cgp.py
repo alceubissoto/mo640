@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 from dataset import get_matrix_dist_from_weighted_edges, create_artificial_matrix_dist, plot_tree
+from plotTree import plotTree
 import numpy as np
 import random
 import os
@@ -311,6 +312,7 @@ def find_edge_weights(valid_tree, matrix):
     nodes = set(matrix[:, 0])
     edges[(matrix[0,0], matrix[1,0])] = matrix[0,2]
     #print(edges)
+    plotTree(edges, input_amount)
 
     # format: key (edge1, edge2) and value (weight)
     return edges
