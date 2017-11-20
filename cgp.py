@@ -209,20 +209,25 @@ def is_valid_graph(active):
 def get_binary_tree(valid_graph):
     root = max(valid_graph.keys())
     # set input in order
-    input_number = 0
+    inputs = set(range(input_amount))
     for key, values in valid_graph.items():
         if values[0] < input_amount:
-            values[0] = input_number
-            input_number += 1
+            if values[0] in inputs:
+                inputs.remove(values[0])
+            else:
+                values[0] = inputs.pop()
         if values[1] < input_amount:
-            values[1] = input_number
-            input_number += 1
+            if values[1] in inputs:
+                inputs.remove(values[1])
+            else:
+                values[1] = inputs.pop()
 
     visited = set()
     valid_tree = dict()
 
     # build binary tree, assumes that tree has at least 2 inputs
     recursive_get_binary_tree(root, valid_graph, visited, valid_tree)
+    print('Valid tree generated', valid_tree)
     return valid_tree
 
 
@@ -251,6 +256,7 @@ def find_edge_weights(valid_tree, matrix):
     #print(valid_tree)
     #print(matrix)
     edges = dict()
+    #print('Valid tree', valid_tree)
 
     while matrix.shape[0] > 2:
 
@@ -285,8 +291,8 @@ def find_edge_weights(valid_tree, matrix):
         col_c = row_c + 1
 
         # Compute the edge weight of the adjacent nodes to their parent
-        ap = max(0, matrix[row_a, col_b] + matrix[row_a,col_c] - matrix[row_b, col_c])
-        bp = max(0, matrix[row_b, col_a] + matrix[row_b,col_c] - matrix[row_a, col_c])
+        ap = max(0, (matrix[row_a, col_b] + matrix[row_a,col_c] - matrix[row_b, col_c])/2)
+        bp = max(0, (matrix[row_b, col_a] + matrix[row_b,col_c] - matrix[row_a, col_c])/2)
         edges[(a, parent)] = ap
         edges[(b, parent)] = bp
 
@@ -301,8 +307,9 @@ def find_edge_weights(valid_tree, matrix):
 
 
     # Add distance between last nodes and remove root
+    #print('Final matrix:', matrix)
     nodes = set(matrix[:, 0])
-    edges[(matrix[0,0], matrix[1,0])] = matrix[0,1]
+    edges[(matrix[0,0], matrix[1,0])] = matrix[0,2]
     #print(edges)
 
     # format: key (edge1, edge2) and value (weight)
@@ -323,7 +330,7 @@ def mutation(ind): #STILL NEED TO BE ABLE TO MUTATE THE OUTPUT
     return gen
 
 
-def create_matrix_dist(out_data, qty=10):
+def create_matrix_dist(out_data, qty=1):
     '''
     Creates matrix distances in the quantity specified.
     Saves matrix distances as numpy files.
@@ -336,7 +343,9 @@ def create_matrix_dist(out_data, qty=10):
                        [2, 12, 4, 0, 6, 6],
                        [3, 12, 6, 6, 0, 2],
                        [4, 12, 6, 6, 2, 0]])
+
     _, new_ind = upgma(matrix)
+    new_ind = fill_individual(new_ind)
     mutated = mutation(new_ind)
     for i in range(qty):
         while True:
@@ -417,8 +426,8 @@ def valid_mutation(individual):
 def run_tests(directory_path):
     results = dict()
     directory = os.fsencode(directory_path)
-    population = []
     for file in os.listdir(directory):
+        population = []
         filename = os.fsdecode(file)
         if filename.endswith("noisy.npy"):
             dataset_matrix = np.load(os.path.join(directory_path, filename))
@@ -430,6 +439,8 @@ def run_tests(directory_path):
             results['initial_'+filename] = fitness_score
             results['initial_upgma'+filename] = fitness_upgma
             upgma_individual['fitness'] = fitness_score
+
+            print('upgma matrix', active_nodes(upgma_individual))
 
             # Add UPGMA individual to population
             population.append(upgma_individual)
