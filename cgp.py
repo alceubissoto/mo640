@@ -11,7 +11,7 @@ import argparse
 import copy
 from neighbor_join import NeighborJoinRunner
 from tqdm import tqdm
-#import weight_cgp
+import weight_cgp
 
 # Seria interessante receber os parametros antes da execucao
 ind_size = 100   # Size of every individual
@@ -479,11 +479,10 @@ def run_tests(directory_path):
         if filename.endswith("noisy.npy"):
             dataset_matrix = np.load(os.path.join(directory_path, filename))
 
-
             # Neighbor Joining
             fitness_neighbor, neighbor_individual = test_neighbor_fitness(dataset_matrix)
             fitness_score = evaluate(neighbor_individual, dataset_matrix)
-            results['initial_'+filename] = fitness_score
+            #results['initial_'+filename] = fitness_score
             results['initial_neighbor'+filename] = fitness_neighbor
             neighbor_individual['fitness'] = fitness_score
             population, best_fitness = mutate_select(dataset_matrix, neighbor_individual)
@@ -493,12 +492,19 @@ def run_tests(directory_path):
             # UPGMA
             fitness_upgma, upgma_individual = test_upgma_fitness(dataset_matrix)
             fitness_score = evaluate(upgma_individual, dataset_matrix)
-            results['initial_'+filename] = fitness_score
+            #results['initial_'+filename] = fitness_score
             results['initial_upgma'+filename] = fitness_upgma
             upgma_individual['fitness'] = fitness_score
             population, best_fitness = mutate_select(dataset_matrix, upgma_individual)
             assert(population[0]['fitness'] == best_fitness)
             results['final_upgma'+filename] = population[0]['fitness']
+
+            # Mutate only Weights UPGMA
+            best, actv_weight, tree_weight = weight_cgp.reproduction(dataset_matrix, input_amount, pop_size, 10000)
+            gen_mtx = weight_cgp.evaluate_tree(actv_weight, best['heights'], input_amount)
+            #print("GENERATED MATIX:", gen_mtx)
+            results['final_only_weights_mutation'+filename] = get_fitness(gen_mtx, dataset_matrix)
+
 
             # print("FINAL: ", population[0])
             # k = dataset_matrix.shape[0] # number of biological objects
