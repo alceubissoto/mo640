@@ -52,9 +52,6 @@ class NeighborJoinRunner:
         return self.dist_matrix
 
     def __load_distance_matrix(self, data):
-        print('data -------')
-        print(data)
-
         dm = DistanceMatrix(data)
         tree = nj(dm)
         tree.bifurcate()

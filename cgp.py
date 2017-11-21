@@ -10,6 +10,7 @@ import sys
 import argparse
 import copy
 from neighbor_join import NeighborJoinRunner
+from tqdm import tqdm
 #import weight_cgp
 
 # Seria interessante receber os parametros antes da execucao
@@ -445,7 +446,7 @@ def mutate_select(dataset_matrix, individual):
     population.append(individual)
 
     # Reproduction
-    for iteration in range(100):
+    for iteration in tqdm(range(100)):
         # Mutation procedure
         for i in range(pop_size - 1):
             mut = valid_mutation(population[0])
@@ -457,8 +458,8 @@ def mutate_select(dataset_matrix, individual):
                 best_fitness = population[i]['fitness']
 
         # Keep only the best individual for the next generation
-        print("BEST FITNESS:", best_fitness)
-        print("ITERATION:", iteration)
+        # print("BEST FITNESS:", best_fitness)
+        # print("ITERATION:", iteration)
         # print("POP SIZE:", len(population))
         for i in range(pop_size):
             if population[i]['fitness'] == best_fitness:

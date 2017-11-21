@@ -5,3 +5,4 @@ networkx
 matplotlib
 #biopython
 scikit-bio
+tqdm
