@@ -5,6 +5,7 @@ import time
 import sys
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph import connected_components, dijkstra, shortest_path
+import networkx as nx
 
 def get_edges_from_valid_tree(valid_tree):
     nodes_edge_right = []
@@ -111,25 +112,22 @@ def plot_tree(valid_tree, input_amount, filename):
     :param filename: 
     :return: 
     '''
-    import matplotlib
-    matplotlib.use('Agg')
-    import networkx as nx
-    import matplotlib.pyplot as plt
-
-
-    G = nx.Graph()
-    _, _, row, col, wgt = create_artificial_matrix_dist(valid_tree, input_amount)
-    G.add_nodes_from(np.unique(row + col))
-    G.add_weighted_edges_from(zip(row, col, wgt))
-    pos = nx.spring_layout(G, k=0.35, iterations=50, scale=2)
-
-
-    edge_labels = dict([((u, v,), d['weight'])
-                        for u, v, d in G.edges(data=True)])
-    nx.draw(G, pos=pos, with_labels=True, node_color='lightblue', node_size=250, font_size=6)
-    nx.draw_networkx_edge_labels(G, edge_labels=edge_labels, pos=pos, font_size=6)
-    plt.savefig(filename)
-    plt.gcf().clear()
-
-    #from networkx.drawing.nx_agraph import write_dot
-    #write_dot(G, 'edgar.dot')
+    # import matplotlib
+    # matplotlib.use('Agg')
+    # import matplotlib.pyplot as plt
+    #
+    #
+    # G = nx.Graph()
+    # _, _, row, col, wgt = create_artificial_matrix_dist(valid_tree, input_amount)
+    # G.add_nodes_from(np.unique(row + col))
+    # G.add_weighted_edges_from(zip(row, col, wgt))
+    # pos = nx.spring_layout(G, k=0.35, iterations=50, scale=2)
+    #
+    #
+    # edge_labels = dict([((u, v,), d['weight'])
+    #                     for u, v, d in G.edges(data=True)])
+    # nx.draw(G, pos=pos, with_labels=True, node_color='lightblue', node_size=250, font_size=6)
+    # nx.draw_networkx_edge_labels(G, edge_labels=edge_labels, pos=pos, font_size=6)
+    # plt.savefig(filename)
+    # plt.gcf().clear()
+    pass

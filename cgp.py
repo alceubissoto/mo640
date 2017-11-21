@@ -9,6 +9,7 @@ import time
 import sys
 import argparse
 import copy
+from neighbor_join import NeighborJoinRunner
 #import weight_cgp
 
 # Seria interessante receber os parametros antes da execucao
@@ -60,6 +61,10 @@ def active_nodes(ind):
             evaluated.append(to_eval[0])
     return used_nodes
 
+
+def neighbor_join(matrix):
+    runner = NeighborJoinRunner(matrix, input_amount)
+    return runner.get_individual(), runner.get_dist_matrix()
 
 def upgma(matrix):
     new_ind = {}
@@ -136,11 +141,12 @@ def upgma(matrix):
         next_node = next_node + 1
 
     new_ind['output'] = next_node -1
+
     #new_ind = fill_individual(new_ind)
 
     return heights, new_ind
 
-#
+
 def evaluate_upgma_matrix(actv, heights):
     matrix = np.zeros((input_amount, input_amount))
     evaluated = {}
@@ -162,7 +168,6 @@ def evaluate_upgma_matrix(actv, heights):
                     matrix[obj, obj_2] = heights[item[0]]*2
 
     return np.array(matrix)
-
 
 
 def fill_individual(ind):
@@ -228,7 +233,7 @@ def get_binary_tree(valid_graph):
 
     # build binary tree, assumes that tree has at least 2 inputs
     recursive_get_binary_tree(root, valid_graph, visited, valid_tree)
-    print('Valid tree generated', valid_tree)
+    # print('Valid tree generated', valid_tree)
     return valid_tree
 
 
@@ -348,6 +353,7 @@ def create_matrix_dist(out_data, qty=1):
 
     _, new_ind = upgma(matrix)
     new_ind = fill_individual(new_ind)
+
     mutated = mutation(new_ind)
     for i in range(qty):
         while True:
@@ -369,26 +375,26 @@ def create_matrix_dist(out_data, qty=1):
                 break
 
 
-def test_topology_mutation(dataset_matrix):
-    k = dataset_matrix.shape[0] # number of biological objects
-    indexed_matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), dataset_matrix))
-    _, upgma_individual = upgma(indexed_matrix)
-    mutated = mutation(upgma_individual)
-
-    count = 0
-    while True:
-        mutated = mutation(mutated)
-        active_mut = active_nodes(mutated)
-        count = count + 1
-        if is_valid_graph(active_mut):
-            break
-
-    valid_tree = get_binary_tree(active_mut)
-    edges = find_edge_weights(valid_tree, indexed_matrix)
-    dist_matrix = get_matrix_dist_from_weighted_edges(edges, k)
-    fitness = get_fitness(dist_matrix, dataset_matrix)
-    print('**** fitness = ' + str(fitness))
-    return fitness
+# def test_topology_mutation(dataset_matrix):
+#     k = dataset_matrix.shape[0] # number of biological objects
+#     indexed_matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), dataset_matrix))
+#     _, upgma_individual = upgma(indexed_matrix)
+#     mutated = mutation(upgma_individual)
+#
+#     count = 0
+#     while True:
+#         mutated = mutation(mutated)
+#         active_mut = active_nodes(mutated)
+#         count = count + 1
+#         if is_valid_graph(active_mut):
+#             break
+#
+#     valid_tree = get_binary_tree(active_mut)
+#     edges = find_edge_weights(valid_tree, indexed_matrix)
+#     dist_matrix = get_matrix_dist_from_weighted_edges(edges, k)
+#     fitness = get_fitness(dist_matrix, dataset_matrix)
+#     print('**** fitness = ' + str(fitness))
+#     return fitness
 
 def test_upgma_fitness(dataset_matrix):
     k = dataset_matrix.shape[0] # number of biological objects
@@ -397,9 +403,15 @@ def test_upgma_fitness(dataset_matrix):
     upgma_individual = fill_individual(upgma_tree)
     actv = active_nodes(upgma_tree)
     upgma_matrix = evaluate_upgma_matrix(actv, heights)
-    print("UPGMA MATRIX:", upgma_matrix)
+    #print("UPGMA MATRIX:", upgma_matrix)
     fitness = get_fitness(upgma_matrix, dataset_matrix)
     return fitness, upgma_individual
+
+def test_neighbor_fitness(dataset_matrix):
+    individual, dist_matrix = neighbor_join(dataset_matrix)
+    neighbor_individual = fill_individual(individual)
+    fitness = get_fitness(dist_matrix, dataset_matrix)
+    return fitness, neighbor_individual
 
 def get_fitness(dist_matrix1, dist_matrix2):
     return np.square(dist_matrix1 - dist_matrix2).sum()
@@ -422,68 +434,80 @@ def valid_mutation(individual):
         count = count + 1
         if is_valid_graph(active_mut):
             break
-    print("count:", count)
+
     return mutated
+
+
+def mutate_select(dataset_matrix, individual):
+    best_fitness = 10000000
+
+    population = []
+    population.append(individual)
+
+    # Reproduction
+    for iteration in range(100):
+        # Mutation procedure
+        for i in range(pop_size - 1):
+            mut = valid_mutation(population[0])
+            mut['fitness'] = evaluate(mut, dataset_matrix)
+            population.append(mut)
+
+        for i in range(pop_size):
+            if population[i]['fitness'] < best_fitness:
+                best_fitness = population[i]['fitness']
+
+        # Keep only the best individual for the next generation
+        print("BEST FITNESS:", best_fitness)
+        print("ITERATION:", iteration)
+        # print("POP SIZE:", len(population))
+        for i in range(pop_size):
+            if population[i]['fitness'] == best_fitness:
+                tmp = []
+                tmp.append(population[i])
+                break
+        population = tmp
+
+    return population, best_fitness
+
 
 def run_tests(directory_path):
     results = dict()
     directory = os.fsencode(directory_path)
     for file in os.listdir(directory):
-        population = []
         filename = os.fsdecode(file)
         if filename.endswith("noisy.npy"):
             dataset_matrix = np.load(os.path.join(directory_path, filename))
 
-            # Evaluate initial fitness
-            #fitness_score = test_topology_mutation(upgma_individual)
+
+            # Neighbor Joining
+            fitness_neighbor, neighbor_individual = test_neighbor_fitness(dataset_matrix)
+            fitness_score = evaluate(neighbor_individual, dataset_matrix)
+            results['initial_'+filename] = fitness_score
+            results['initial_neighbor'+filename] = fitness_neighbor
+            neighbor_individual['fitness'] = fitness_score
+            population, best_fitness = mutate_select(dataset_matrix, neighbor_individual)
+            assert(population[0]['fitness'] == best_fitness)
+            results['final_neighbor'+filename] = population[0]['fitness']
+
+            # UPGMA
             fitness_upgma, upgma_individual = test_upgma_fitness(dataset_matrix)
             fitness_score = evaluate(upgma_individual, dataset_matrix)
             results['initial_'+filename] = fitness_score
             results['initial_upgma'+filename] = fitness_upgma
             upgma_individual['fitness'] = fitness_score
+            population, best_fitness = mutate_select(dataset_matrix, upgma_individual)
+            assert(population[0]['fitness'] == best_fitness)
+            results['final_upgma'+filename] = population[0]['fitness']
 
-            print('upgma matrix', active_nodes(upgma_individual))
+            # print("FINAL: ", population[0])
+            # k = dataset_matrix.shape[0] # number of biological objects
+            # indexed_matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), dataset_matrix))
+            # valid_tree = get_binary_tree(active_nodes(population[0]))
+            # edges = find_edge_weights(valid_tree, indexed_matrix)
+            # dist_matrix = get_matrix_dist_from_weighted_edges(edges, k)
+            # print("MATRIX:", dist_matrix)
 
-            # Add UPGMA individual to population
-            population.append(upgma_individual)
-            best_fitness = fitness_score
-
-            # Reproduction
-            for iteration in range(100):
-                # Mutation procedure
-                for i in range(pop_size-1):
-                    mut = valid_mutation(population[0])
-                    mut['fitness'] = evaluate(mut, dataset_matrix)
-                    population.append(mut)
-
-                for i in range(pop_size):
-                    if(population[i]['fitness'] < best_fitness):
-                        best_fitness = population[i]['fitness']
-
-                # Keep only the best individual for the next generation
-                print("BEST FITNESS:", best_fitness)
-                print("ITERATION:", iteration)
-                #print("POP SIZE:", len(population))
-                for i in range(pop_size):
-                    if population[i]['fitness'] == best_fitness:
-                        tmp = []
-                        tmp.append(population[i])
-                        break
-                population = tmp
-
-            assert(population[0]['fitness']==best_fitness)
-            results['final_'+filename] = population[0]['fitness']
-            print("FINAL: ", population[0])
-            k = dataset_matrix.shape[0] # number of biological objects
-            indexed_matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), dataset_matrix))
-            valid_tree = get_binary_tree(active_nodes(population[0]))
-            edges = find_edge_weights(valid_tree, indexed_matrix)
-            dist_matrix = get_matrix_dist_from_weighted_edges(edges, k)
-            print("MATRIX:", dist_matrix)
-
-
-
-    print(results)
+    #print(results)
     print('####################################')
     print('            TEST RESULTS            ')
     print('####################################')
@@ -500,7 +524,7 @@ def main(args):
     elif args.in_data is not None:
         run_tests(args.in_data)
     else:
-        print('Usage: python cgp.py [--create-dataset] [--input=<path to directory with source data>]')
+        print('Usage information: python cgp.py -h')
 
 
 if __name__ == "__main__":
