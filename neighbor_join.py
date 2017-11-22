@@ -53,18 +53,16 @@ class NeighborJoinRunner:
 
     def __load_distance_matrix(self, data):
         dm = DistanceMatrix(data)
-        tree = nj(dm)
-        tree.bifurcate()
+        nj_tree = nj(dm)
 
-        self.__post_order(tree)
-        self.__build_genotype(tree)
-
-        df = tree.tip_tip_distances().to_data_frame()
+        df = nj_tree.tip_tip_distances().to_data_frame()
         df.sort_index(axis=1, inplace=True)
         df.sort_index(axis=0, inplace=True)
-        # dist_matrix_df.reindex_axis(sorted(dist_matrix_df.columns), axis=1)
         self.dist_matrix = df
 
+        nj_tree.bifurcate()
+        self.__post_order(nj_tree)
+        self.__build_genotype(nj_tree)
 
 if __name__ == "__main__":
     data = [[0, 12, 12, 12, 12],
