@@ -1,6 +1,6 @@
 from skbio import DistanceMatrix
 from skbio.tree import nj
-
+import numpy as np
 
 class NeighborJoinRunner:
     genotype = []
@@ -56,9 +56,13 @@ class NeighborJoinRunner:
         nj_tree = nj(dm)
 
         df = nj_tree.tip_tip_distances().to_data_frame()
-        df.sort_index(axis=1, inplace=True)
-        df.sort_index(axis=0, inplace=True)
-        self.dist_matrix = df
+
+        df.index = df.index.astype(int)
+        df.sort_index(inplace=True)
+        df.columns = df.columns.values.astype(np.int32)
+        df = df[sorted(df.columns)]
+
+        self.dist_matrix = df.as_matrix()
 
         nj_tree.bifurcate()
         self.__post_order(nj_tree)

@@ -12,6 +12,7 @@ import copy
 from neighbor_join import NeighborJoinRunner
 from tqdm import tqdm
 import weight_cgp
+import pandas as pd
 
 # Seria interessante receber os parametros antes da execucao
 ind_size = 100   # Size of every individual
@@ -439,14 +440,15 @@ def valid_mutation(individual):
     return mutated
 
 
-def mutate_select(dataset_matrix, individual):
+def mutate_select(dataset_matrix, individual, num_iterations=100):
     best_fitness = 10000000
 
-    population = []
+    partial_best_fitness = pd.DataFrame(columns=['iteration','gm_time','best_fitness'], index=np.arange(num_iterations))
+    population = list()
     population.append(individual)
 
     # Reproduction
-    for iteration in tqdm(range(100)):
+    for iteration in tqdm(range(num_iterations)):
         # Mutation procedure
         for i in range(pop_size - 1):
             mut = valid_mutation(population[0])
@@ -457,18 +459,24 @@ def mutate_select(dataset_matrix, individual):
             if population[i]['fitness'] < best_fitness:
                 best_fitness = population[i]['fitness']
 
+
+        # Save partial results
+        partial_best_fitness.loc[iteration]['iteration'] = iteration
+        partial_best_fitness.loc[iteration]['gm_time'] = time.gmtime()
+        partial_best_fitness.loc[iteration]['best_fitness'] = best_fitness
+
         # Keep only the best individual for the next generation
         # print("BEST FITNESS:", best_fitness)
         # print("ITERATION:", iteration)
         # print("POP SIZE:", len(population))
         for i in range(pop_size):
             if population[i]['fitness'] == best_fitness:
-                tmp = []
+                tmp = list()
                 tmp.append(population[i])
                 break
         population = tmp
 
-    return population, best_fitness
+    return population, best_fitness, partial_best_fitness
 
 
 def run_tests(directory_path):
@@ -477,17 +485,22 @@ def run_tests(directory_path):
     for file in os.listdir(directory):
         filename = os.fsdecode(file)
         if filename.endswith("noisy.npy"):
+            print("Testing matrix:", filename)
+
             dataset_matrix = np.load(os.path.join(directory_path, filename))
 
             # Neighbor Joining
             fitness_neighbor, neighbor_individual = test_neighbor_fitness(dataset_matrix)
             fitness_score = evaluate(neighbor_individual, dataset_matrix)
-            #results['initial_'+filename] = fitness_score
-            results['initial_neighbor'+filename] = fitness_neighbor
+
+            results['neighbor_initial'+filename] = fitness_score
+            results['neighbor_pure'+filename] = fitness_neighbor
             neighbor_individual['fitness'] = fitness_score
-            population, best_fitness = mutate_select(dataset_matrix, neighbor_individual)
+            population, best_fitness, partial_results = mutate_select(dataset_matrix, neighbor_individual,num_iterations=1000)
             assert(population[0]['fitness'] == best_fitness)
-            results['final_neighbor'+filename] = population[0]['fitness']
+            results['neighbor_final'+filename] = population[0]['fitness']
+            csv_file_path = os.path.join(directory_path, "neighbor_partial_" + filename.replace('npy', 'csv'))
+            partial_results.to_csv(csv_file_path)
 
             # UPGMA
             fitness_upgma, upgma_individual = test_upgma_fitness(dataset_matrix)
@@ -495,12 +508,13 @@ def run_tests(directory_path):
             #results['initial_'+filename] = fitness_score
             results['initial_upgma'+filename] = fitness_upgma
             upgma_individual['fitness'] = fitness_score
-            population, best_fitness = mutate_select(dataset_matrix, upgma_individual)
+            population, best_fitness, partial_results = mutate_select(dataset_matrix, upgma_individual,num_iterations=1000)
             assert(population[0]['fitness'] == best_fitness)
             results['final_upgma'+filename] = population[0]['fitness']
+            partial_results.to_csv("upgma_partial_" + filename.replace('npy', 'csv'))
 
             # Mutate only Weights UPGMA
-            best, actv_weight, tree_weight = weight_cgp.reproduction(dataset_matrix, input_amount, pop_size, 10000)
+            best, actv_weight, tree_weight = weight_cgp.reproduction(dataset_matrix, input_amount, pop_size, 100)
             gen_mtx = weight_cgp.evaluate_tree(actv_weight, best['heights'], input_amount)
             #print("GENERATED MATIX:", gen_mtx)
             results['final_only_weights_mutation'+filename] = get_fitness(gen_mtx, dataset_matrix)
