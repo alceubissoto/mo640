@@ -470,7 +470,7 @@ def evaluate_ultrametric(individual, dataset_matrix):
 
     # Loop 50 times and get best matrix generated for that topology
     # using random order of find_edge_weights
-    
+
     print ('First fitness:', fitness)
     for i in range(50):
         indexed_matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), dataset_matrix))
@@ -494,7 +494,7 @@ def evaluate(individual, dataset_matrix):
 
     # Loop 50 times and get best matrix generated for that topology
     # using random order of find_edge_weights
-    
+
     #print ('First fitness:', fitness)
     for i in range(50):
         indexed_matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), dataset_matrix))
@@ -558,6 +558,68 @@ def mutate_select(dataset_matrix, individual, num_iterations=100):
 
     return population, best_fitness, partial_best_fitness
 
+def mutate_mtx(dataset_matrix, rate_mutate):
+    new_matrix = np.array(dataset_matrix)
+    assert(rate_mutate < 1)
+    for i in range(int(rate_mutate*dataset_matrix.shape[0])):
+        row = random.randint(0, dataset_matrix.shape[0]-1)
+        column = random.randint(0, dataset_matrix.shape[1]-1)
+        value = np.random.normal(loc=0.0, scale=1.0)
+        #print(value)
+        if (row != column):
+            new_matrix[row, column] += value
+            new_matrix[column, row] += value
+    return new_matrix
+
+def reproduction_mtx(dataset_matrix, rate_mutate, num_iterations):
+    population = []
+
+    first_individual = {}
+    first_individual['mtx'] = dataset_matrix.astype(np.float32)
+    first_individual['fitness'], _ = test_neighbor_fitness(first_individual['mtx'])
+    population.append(first_individual)
+    best_fitness = first_individual['fitness']
+
+    for it in tqdm(range(num_iterations)):
+        for i in range(pop_size-1):
+            tmp_ind = {}
+            tmp_ind['mtx'] = mutate_mtx(population[0]['mtx'], rate_mutate)
+            #print(tmp_ind['mtx'])
+            tmp_ind['fitness'], _ = test_neighbor_fitness(tmp_ind['mtx'])
+            if tmp_ind['fitness'] < best_fitness:
+                best_fitness = tmp_ind['fitness']
+            population.append(tmp_ind)
+
+        for i in range(pop_size):
+            if population[i]['fitness'] == best_fitness:
+                new_pop = []
+                new_pop.append(population[i])
+                population = new_pop
+                break
+
+        assert(len(population)==1)
+    return population[0]
+
+
+def run_tests_2(directory_path):
+    results = dict()
+    directory = os.fsencode(directory_path)
+    for file in os.listdir(directory):
+        filename = os.fsdecode(file)
+        if filename.endswith("noisy.npy"):
+            print("Testing matrix:", filename)
+            dataset_matrix = np.load(os.path.join(directory_path, filename))
+
+            # Neighbor Joining
+            fitness_neighbor, neighbor_individual = test_neighbor_fitness(dataset_matrix)
+            #fitness_score = evaluate(neighbor_individual, dataset_matrix)
+
+            print("fitness_neighbor:", fitness_neighbor)
+            best = reproduction_mtx(dataset_matrix, 0.4, 100)
+            print("FINAL FITNESS:", best['fitness'])
+            #print("ORIGINAL:", dataset_matrix)
+            print("PREVIOUS DISTANCE TO ORACLE:", get_fitness(dataset_matrix, np.load(os.path.join(directory_path, filename.split('.')[0]+'.additive.npy'))))
+            print("DISTANCE TO ORACLE:", get_fitness(best['mtx'], np.load(os.path.join(directory_path, filename.split('.')[0]+'.additive.npy'))))
 
 def run_tests(directory_path):
     results = dict()
@@ -614,7 +676,7 @@ def main(args):
         create_matrix_dist(args)
         print('Dataset written to directory: ' + args.out_data)
     elif args.in_data is not None:
-        run_tests(args.in_data)
+        run_tests_2(args.in_data)
     else:
         print('Usage information: python cgp.py -h')
 
