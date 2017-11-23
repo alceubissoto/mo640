@@ -75,7 +75,7 @@ def get_matrix_dist(nodes_edge_right, nodes_edge_left, edge_weights):
     return dist_matrix
 
 
-def create_artificial_matrix_dist(valid_tree, num_leafs, lowest_weight=1, highest_weight=10):
+def create_artificial_matrix_dist(valid_tree, num_leafs, lowest_weight=1, highest_weight=10, stdev=1):
     '''
     Based on a valid tree, create the additive matrix + some gaussian noise.
     :param valid_tree: dictionary where keys are nodes and the value
@@ -93,7 +93,7 @@ def create_artificial_matrix_dist(valid_tree, num_leafs, lowest_weight=1, highes
     dist_matrix = dist_matrix[0:num_leafs, 0:num_leafs]
 
     # add gaussian noise
-    noise = np.rint(np.random.normal(0, 1, dist_matrix.shape))
+    noise = np.rint(np.random.normal(0, stdev, dist_matrix.shape))
     noise = np.tril(noise) + np.tril(noise, -1).T
     np.fill_diagonal(noise, 0)
     noisy_matrix = dist_matrix + noise
@@ -112,22 +112,17 @@ def plot_tree(valid_tree, input_amount, filename):
     :param filename: 
     :return: 
     '''
-    # import matplotlib
-    # matplotlib.use('Agg')
-    # import matplotlib.pyplot as plt
+    # import pygraphviz as pgv
     #
+    # G = pgv.AGraph(splines=False)
     #
-    # G = nx.Graph()
-    # _, _, row, col, wgt = create_artificial_matrix_dist(valid_tree, input_amount)
-    # G.add_nodes_from(np.unique(row + col))
-    # G.add_weighted_edges_from(zip(row, col, wgt))
-    # pos = nx.spring_layout(G, k=0.35, iterations=50, scale=2)
+    # edges = get_edges_from_valid_tree(valid_tree)
+    # for edge in edges.keys():
+    #     G.add_node(edge[0], shape='circle' if edge[0] < input_amount else 'point')
+    #     G.add_node(edge[1], shape='circle' if edge[1] < input_amount else 'point')
     #
+    # for edge, weight in edges.items():
+    #     G.add_edge(edge[0], edge[1], label=str(weight), color='gray')
     #
-    # edge_labels = dict([((u, v,), d['weight'])
-    #                     for u, v, d in G.edges(data=True)])
-    # nx.draw(G, pos=pos, with_labels=True, node_color='lightblue', node_size=250, font_size=6)
-    # nx.draw_networkx_edge_labels(G, edge_labels=edge_labels, pos=pos, font_size=6)
-    # plt.savefig(filename)
-    # plt.gcf().clear()
+    # G.draw(filename, prog='dot')  # draw png
     pass
