@@ -260,6 +260,67 @@ def recursive_get_binary_tree(cur, valid_graph, visited, valid_tree):
 
     return node_with_input_left if node_with_input_left >= 0 else node_with_input_right
 
+def find_edge_weights_ultrametric(valid_tree, matrix):
+    #print(valid_tree)
+    #print(matrix)
+    # Dict with edges and weights
+    edges = dict()
+    #print('Valid tree', valid_tree)
+
+    while matrix.shape[0] > 2:
+
+        nodes = set(matrix[:, 0])
+
+        # Find two adjacent nodes in set nodes
+        adjacencies = []
+        for parent, children in valid_tree.items():
+            if children[0] in nodes and children[1] in nodes:
+                adjacencies.append((parent, children[0], children[1]))
+
+        adjacent = random.choice(adjacencies)
+        parent, a, b = adjacent
+
+        # Find coordinates of a, b and c
+        row_a = list(matrix[:, 0]).index(a)
+        row_b = list(matrix[:, 0]).index(b)
+        col_a = row_a + 1
+        col_b = row_b + 1
+
+        # Find another node c in set of nodes, that is not one of the two adjacent (a,b)
+        # such that minimizes |dist(a,c) - dist(b,c)|
+        mindist = 10000000 # big number
+        for row, node in enumerate(matrix[:, 0]):
+            if node not in (a, b):
+                row_c, col_c, c = row, row+1, node
+                break
+
+        # Compute the edge weight of the adjacent nodes to their parent
+        ap = max(0, (matrix[row_a, col_b] + matrix[row_a,col_c] - matrix[row_b, col_c])/2)
+        bp = max(0, (matrix[row_b, col_a] + matrix[row_b,col_c] - matrix[row_a, col_c])/2)
+        edges[(a, parent)] = (ap + bp)/2
+        edges[(b, parent)] = (ap + bp)/2
+
+        # Now replace the row and column of 'a' with its parent
+        matrix[row_a, 0] = parent
+        matrix[row_a, 1:] = [max(0, (dist_a - ap +  dist_b - bp)/2) for dist_a, dist_b in zip(matrix[row_a, 1:], matrix[row_b, 1:])]
+        #matrix[row_a, 1:] = [max(0, (dist - ap)) for dist in matrix[row_a, 1:]]
+        matrix[:, col_a] = matrix[row_a, 1:]
+        # and remove the row and column of 'b'
+        matrix = np.delete(matrix, row_b, 0)
+        matrix = np.delete(matrix, col_b, 1)
+        #print(matrix)
+
+    # Add distance between last nodes and remove root
+    #print('Final matrix:', matrix)
+    edges[(matrix[0,0], matrix[1,0])] = matrix[0,2]
+    #print(edges)
+    #plotTree(edges, input_amount)
+
+    # format: key (edge1, edge2) and value (weight)
+    print(edges)
+    return edges
+
+
 def find_edge_weights(valid_tree, matrix):
     #print(valid_tree)
     #print(matrix)
@@ -413,6 +474,30 @@ def test_neighbor_fitness(dataset_matrix):
 def get_fitness(dist_matrix1, dist_matrix2):
     return np.square(dist_matrix1 - dist_matrix2).sum()
 
+def evaluate_ultrametric(individual, dataset_matrix):
+    k = dataset_matrix.shape[0] # number of biological objects
+    indexed_matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), dataset_matrix))
+    valid_tree = get_binary_tree(active_nodes(individual))
+    edges = find_edge_weights_ultrametric(valid_tree, indexed_matrix)
+    dist_matrix = get_matrix_dist_from_weighted_edges(edges, k)
+    fitness = get_fitness(dist_matrix, dataset_matrix)
+
+    # Loop 50 times and get best matrix generated for that topology
+    # using random order of find_edge_weights
+    
+    print ('First fitness:', fitness)
+    for i in range(50):
+        indexed_matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), dataset_matrix))
+        new_edges = find_edge_weights(valid_tree, indexed_matrix)
+        new_dist_matrix = get_matrix_dist_from_weighted_edges(new_edges, k)
+        new_fitness = get_fitness(new_dist_matrix, dataset_matrix)
+        if new_fitness < fitness:
+            edges, dist_matrix, fitness = new_edges, new_dist_matrix, new_fitness
+    print ('Last fitness:', fitness)
+
+    #print('**** fitness = ' + str(fitness))
+    return fitness
+
 def evaluate(individual, dataset_matrix):
     k = dataset_matrix.shape[0] # number of biological objects
     indexed_matrix = np.hstack((np.array(range(input_amount)).reshape((input_amount, 1)), dataset_matrix))
@@ -493,7 +578,7 @@ def run_tests(directory_path):
     directory = os.fsencode(directory_path)
     for file in os.listdir(directory):
         filename = os.fsdecode(file)
-        if filename.endswith("noisy.npy"):
+        if filename.endswith("additive.npy"):
             print("Testing matrix:", filename)
 
             dataset_matrix = np.load(os.path.join(directory_path, filename))
@@ -505,7 +590,7 @@ def run_tests(directory_path):
             results['neighbor_initial'+filename] = fitness_score
             results['neighbor_pure'+filename] = fitness_neighbor
             neighbor_individual['fitness'] = fitness_score
-            population, best_fitness, partial_results = mutate_select(dataset_matrix, neighbor_individual,num_iterations=100)
+            population, best_fitness, partial_results = mutate_select(dataset_matrix, neighbor_individual,num_iterations=1)
             assert(population[0]['fitness'] == best_fitness)
             results['neighbor_final'+filename] = population[0]['fitness']
             csv_file_path = os.path.join(directory_path, "neighbor_partial_" + filename.replace('npy', 'csv'))
@@ -513,11 +598,12 @@ def run_tests(directory_path):
 
             # UPGMA
             fitness_upgma, upgma_individual = test_upgma_fitness(dataset_matrix)
-            fitness_score = evaluate(upgma_individual, dataset_matrix)
-            #results['initial_'+filename] = fitness_score
-            results['initial_upgma'+filename] = fitness_upgma
+            fitness_score = evaluate_ultrametric(upgma_individual, dataset_matrix)
+
+            results['initial_upgma'+filename] = fitness_score
+            results['upgma_pure'+filename] = fitness_upgma
             upgma_individual['fitness'] = fitness_score
-            population, best_fitness, partial_results = mutate_select(dataset_matrix, upgma_individual,num_iterations=1)
+            population, best_fitness, partial_results = mutate_select(dataset_matrix, upgma_individual,num_iterations=10)
             assert(population[0]['fitness'] == best_fitness)
             results['final_upgma'+filename] = population[0]['fitness']
             partial_results.to_csv("upgma_partial_" + filename.replace('npy', 'csv'))
