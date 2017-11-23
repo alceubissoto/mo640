@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-from dataset import get_matrix_dist_from_weighted_edges, create_artificial_matrix_dist, plot_tree
+from create_dataset import get_matrix_dist_from_weighted_edges, create_artificial_matrix_dist, plot_tree
 from plotTree import plotTree
 import numpy as np
 import random
@@ -403,8 +403,6 @@ def create_matrix_dist(args):
     :return: none
     '''
     out_data = args.out_data
-    input_amount = args.matrix_count
-    qty = args.qty
 
     matrix = np.array([[0, 0, 12, 12, 12, 12],
                        [1, 12, 0, 4, 6, 6],
@@ -416,7 +414,7 @@ def create_matrix_dist(args):
     new_ind = fill_individual(new_ind)
 
     mutated = mutation(new_ind)
-    for i in range(qty):
+    for i in range(int(args.qty)):
         while True:
             mutated = mutation(mutated)
             active_mut = active_nodes(mutated)
@@ -436,7 +434,7 @@ def create_matrix_dist(args):
                 np.savetxt(os.path.join(out_data, str(millis) + '.additive.txt'), dist_matrix, fmt='%d')
                 np.savetxt(os.path.join(out_data, str(millis) + '.additive.noisy.txt'), noisy_matrix, fmt='%d')
 
-                plot_tree(valid_tree, num_leafs, os.path.join(out_data, str(millis) + '.jpg'))
+                plot_tree(valid_tree, args.num_leafs, os.path.join(out_data, str(millis) + '.jpg'))
                 break
 
 
@@ -684,10 +682,10 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Genetic algorithms to create phylogenetic trees.')
     parser.add_argument('--out-data', help='creates dataset')
-    parser.add_argument('--num-leafs', help='dimension of the matrices created')
-    parser.add_argument('--stdev', help='std dev of the noise')
-    parser.add_argument('--max-weight', help='max weight')
-    parser.add_argument('--qty', help='number of matrices to create')
+    parser.add_argument('--num-leafs', help='dimension of the matrices created', type=int)
+    parser.add_argument('--stdev', help='std dev of the noise', type=int)
+    parser.add_argument('--max-weight', help='max weight', type=int)
+    parser.add_argument('--qty', help='number of matrices to create', type=int)
     parser.add_argument('--in-data', help='runs genetic algorithms using source data')
     args = parser.parse_args()
     main(args)
