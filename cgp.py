@@ -17,9 +17,9 @@ from bokeh.plotting import figure, output_file, show
 
 # Seria interessante receber os parametros antes da execucao
 ind_size = 100   # Size of every individual
-input_amount = 20 # Amount of inputs
+input_amount = 10 # Amount of inputs
 func_amount = 2  # Amount of functions STILL NEED TO DEFINE THESE
-pop_size = 5     # Population Size
+pop_size = 10     # Population Size
 # Talvez as operacoes devessem ser já formatos de arvores (uniao de varios nos)..
 
 def create_new_individual():
@@ -560,14 +560,18 @@ def mutate_select(dataset_matrix, individual, num_iterations=100):
 def mutate_mtx(dataset_matrix, rate_mutate):
     new_matrix = np.array(dataset_matrix)
     assert(rate_mutate < 1)
-    for i in range(int(rate_mutate*dataset_matrix.shape[0])):
-        row = random.randint(0, dataset_matrix.shape[0]-1)
-        column = random.randint(0, dataset_matrix.shape[1]-1)
-        value = np.random.normal(loc=0.0, scale=0.5)
-        #print(value)
-        if (row != column):
-            new_matrix[row, column] += value
-            new_matrix[column, row] += value
+    #for i in range(int(rate_mutate*dataset_matrix.shape[0])):
+    for _ in range(2):
+        row = 0
+        column = 0
+        while(row==column):
+            row = random.randint(0, dataset_matrix.shape[0]-1)
+            column = random.randint(0, dataset_matrix.shape[1]-1)
+            value = np.random.normal(loc=0.0, scale=0.5)
+            #print(value)
+            if (row != column):
+                new_matrix[row, column] += value
+                new_matrix[column, row] += value
     return new_matrix
 
 def mutate_mtx_distrib(dataset_matrix):
@@ -603,15 +607,9 @@ def reproduction_mtx(dataset_matrix, rate_mutate, num_iterations, mutate_distrib
     population.append(first_individual)
     best_fitness = first_individual['fitness']
 
-
     results['y'] = []
 
-    if(mutate_distrib):
-        results['x'] = list(range(0, num_iterations, 2))
-        num_iterations = num_iterations/2
-    else:
-        results['x'] = list(range(0, num_iterations, int(rate_mutate*dataset_matrix.shape[0])))
-        num_iterations = num_iterations/(int(rate_mutate*dataset_matrix.shape[0]))
+    results['x'] = list(range(num_iterations))
 
     for it in tqdm(range(int(num_iterations))):
         # Mutation
@@ -640,7 +638,6 @@ def reproduction_mtx(dataset_matrix, rate_mutate, num_iterations, mutate_distrib
         assert(len(population)==1)
     return results, population[0]
 
-
 def run_tests_2(directory_path):
 
     # output to static HTML file
@@ -653,6 +650,7 @@ def run_tests_2(directory_path):
        x_axis_label='Iterations', y_axis_label='Fitness'
     )
 
+    it = 1000 #iterations
     results = dict()
     directory = os.fsencode(directory_path)
     for file in os.listdir(directory):
@@ -663,21 +661,23 @@ def run_tests_2(directory_path):
 
             # Neighbor Joining
             fitness_neighbor, neighbor_individual = test_neighbor_fitness(dataset_matrix)
-
+            #results['initial_'+filename] = fitness_neighbor
             print("fitness_neighbor:", fitness_neighbor)
-            output, best = reproduction_mtx(dataset_matrix, 0.4, 2000)
+            output, best = reproduction_mtx(dataset_matrix, 0.1, it)
             print("FINAL FITNESS:", best['fitness'])
             #print("ORIGINAL:", dataset_matrix)
 
             # Distributed Mutation
-            print("fitness_neighbor:", fitness_neighbor)
-            output2, best = reproduction_mtx(dataset_matrix, 0.4, 2000, True)
-            print("FINAL FITNESS:", best['fitness'])
+
+            output2, best2 = reproduction_mtx(dataset_matrix, 0.1, it, True)
+            print("FINAL FITNESS:", best2['fitness'])
             #print("ORIGINAL:", dataset_matrix)
 
             p.circle(output['x'], output['y'], legend="Mutating Matrix", fill_color="white", size=8)
             p.circle(output2['x'], output2['y'], legend="Distributing on Matrix", fill_color="red", size=8)
             show(p)
+            np.save(filename+'-results-'+str(it)+'-'+str(dataset_matrix.shape[0]), [output, output2])
+            break
 
 def run_tests(directory_path):
     results = dict()
