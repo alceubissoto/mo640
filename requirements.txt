@@ -6,3 +6,4 @@ matplotlib
 #biopython
 scikit-bio
 tqdm
+bokeh
