@@ -13,6 +13,7 @@ from neighbor_join import NeighborJoinRunner
 from tqdm import tqdm
 import weight_cgp
 import pandas as pd
+from bokeh.plotting import figure, output_file, show
 
 # Seria interessante receber os parametros antes da execucao
 ind_size = 100   # Size of every individual
@@ -562,44 +563,96 @@ def mutate_mtx(dataset_matrix, rate_mutate):
     for i in range(int(rate_mutate*dataset_matrix.shape[0])):
         row = random.randint(0, dataset_matrix.shape[0]-1)
         column = random.randint(0, dataset_matrix.shape[1]-1)
-        value = np.random.normal(loc=0.0, scale=1.0)
+        value = np.random.normal(loc=0.0, scale=0.5)
         #print(value)
         if (row != column):
             new_matrix[row, column] += value
             new_matrix[column, row] += value
     return new_matrix
 
-def reproduction_mtx(dataset_matrix, rate_mutate, num_iterations):
-    population = []
+def mutate_mtx_distrib(dataset_matrix):
+    new_matrix = np.array(dataset_matrix)
+    value = np.random.normal(loc=0.0, scale=0.5)
 
+    # decrease distance from two nodes:
+    row = random.randint(0, dataset_matrix.shape[0]-1)
+    column = random.randint(0, dataset_matrix.shape[1]-1)
+    while (row == column):
+        column = random.randint(0, dataset_matrix.shape[1]-1)
+    new_matrix[row, column] -= value
+    new_matrix[column, row] -= value
+
+# increase distance from two nodes:
+    row = random.randint(0, dataset_matrix.shape[0]-1)
+    column = random.randint(0, dataset_matrix.shape[1]-1)
+    while (row == column):
+        column = random.randint(0, dataset_matrix.shape[1]-1)
+    new_matrix[row, column] += value
+    new_matrix[column, row] += value
+
+    return new_matrix
+
+
+def reproduction_mtx(dataset_matrix, rate_mutate, num_iterations, mutate_distrib=False):
+    population = []
+    results = {}
     first_individual = {}
     first_individual['mtx'] = dataset_matrix.astype(np.float32)
-    first_individual['fitness'], _ = test_neighbor_fitness(first_individual['mtx'])
+    _, dist_matrix = neighbor_join(first_individual['mtx'])
+    first_individual['fitness'] = get_fitness(dist_matrix, dataset_matrix)
     population.append(first_individual)
     best_fitness = first_individual['fitness']
 
-    for it in tqdm(range(num_iterations)):
+
+    results['y'] = []
+
+    if(mutate_distrib):
+        results['x'] = list(range(0, num_iterations, 2))
+        num_iterations = num_iterations/2
+    else:
+        results['x'] = list(range(0, num_iterations, int(rate_mutate*dataset_matrix.shape[0])))
+        num_iterations = num_iterations/(int(rate_mutate*dataset_matrix.shape[0]))
+
+    for it in tqdm(range(int(num_iterations))):
+        # Mutation
         for i in range(pop_size-1):
             tmp_ind = {}
-            tmp_ind['mtx'] = mutate_mtx(population[0]['mtx'], rate_mutate)
-            #print(tmp_ind['mtx'])
-            tmp_ind['fitness'], _ = test_neighbor_fitness(tmp_ind['mtx'])
+            if (mutate_distrib):
+                tmp_ind['mtx'] = mutate_mtx_distrib(population[0]['mtx'])
+            else:
+                tmp_ind['mtx'] = mutate_mtx(population[0]['mtx'], rate_mutate)
+
+            _, dist_matrix = neighbor_join(tmp_ind['mtx'])
+            tmp_ind['fitness'] = get_fitness(dist_matrix, dataset_matrix)
             if tmp_ind['fitness'] < best_fitness:
                 best_fitness = tmp_ind['fitness']
             population.append(tmp_ind)
 
+        # Selection
         for i in range(pop_size):
             if population[i]['fitness'] == best_fitness:
+                results['y'].append(best_fitness)
                 new_pop = []
                 new_pop.append(population[i])
                 population = new_pop
                 break
 
         assert(len(population)==1)
-    return population[0]
+    return results, population[0]
 
 
 def run_tests_2(directory_path):
+
+    # output to static HTML file
+    output_file("log_lines.html")
+
+    # create a new plot
+    p = figure(
+       tools="pan,box_zoom,reset,save",
+       title="Test",
+       x_axis_label='Iterations', y_axis_label='Fitness'
+    )
+
     results = dict()
     directory = os.fsencode(directory_path)
     for file in os.listdir(directory):
@@ -610,14 +663,21 @@ def run_tests_2(directory_path):
 
             # Neighbor Joining
             fitness_neighbor, neighbor_individual = test_neighbor_fitness(dataset_matrix)
-            #fitness_score = evaluate(neighbor_individual, dataset_matrix)
 
             print("fitness_neighbor:", fitness_neighbor)
-            best = reproduction_mtx(dataset_matrix, 0.4, 100)
+            output, best = reproduction_mtx(dataset_matrix, 0.4, 2000)
             print("FINAL FITNESS:", best['fitness'])
             #print("ORIGINAL:", dataset_matrix)
-            print("PREVIOUS DISTANCE TO ORACLE:", get_fitness(dataset_matrix, np.load(os.path.join(directory_path, filename.split('.')[0]+'.additive.npy'))))
-            print("DISTANCE TO ORACLE:", get_fitness(best['mtx'], np.load(os.path.join(directory_path, filename.split('.')[0]+'.additive.npy'))))
+
+            # Distributed Mutation
+            print("fitness_neighbor:", fitness_neighbor)
+            output2, best = reproduction_mtx(dataset_matrix, 0.4, 2000, True)
+            print("FINAL FITNESS:", best['fitness'])
+            #print("ORIGINAL:", dataset_matrix)
+
+            p.circle(output['x'], output['y'], legend="Mutating Matrix", fill_color="white", size=8)
+            p.circle(output2['x'], output2['y'], legend="Distributing on Matrix", fill_color="red", size=8)
+            show(p)
 
 def run_tests(directory_path):
     results = dict()
