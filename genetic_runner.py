@@ -3,10 +3,11 @@ from skbio import DistanceMatrix
 from skbio.tree import nj
 import argparse
 import os
-import bottleneck as bn
 import time
 from tqdm import tqdm
 import pandas as pd
+import itertools
+import random
 
 NUM_PARENTS = 5
 NUM_CHILDREN = 2
@@ -67,10 +68,26 @@ class GeneticAlgorithmRunner:
 
     def mutate(self, dist_matrix):
         '''
-        Returns an object of Individual type
+        Randomly mutate some cells
         :return:
         '''
-        raise NotImplementedError("Please Implement this method in child class")
+        diff_matrix = np.square(self.ground_truth_matrix - dist_matrix)
+        child_matrix = np.copy(dist_matrix)
+        noise = np.random.normal(loc=0.0, scale=SIGMA)
+
+        # this returns a list of indices of the highest elements
+        # the indices are the matrix in a flattened array
+        # we are multiplying by 2 because this is a symmetric matrix so there are 2
+        # equal values always
+        num_cells_to_mutate = 5
+        indices = np.argsort(diff_matrix, axis=None)[-(num_cells_to_mutate*2):]
+        for ind in indices:
+            i, j = np.unravel_index(ind, diff_matrix.shape)
+
+            # add noise to the cell with highest distance from the ground truth
+            child_matrix[i, j] = child_matrix[i, j] + noise
+
+        return child_matrix
 
     def breed(self):
         '''
@@ -85,12 +102,7 @@ class GeneticAlgorithmRunner:
         '''
 
         self.population.sort(key=lambda x: x.fitness_score)
-
-        # print('select before:', len(self.population))
-        # print('before selection:', [x.fitness_score for x in self.population])
         del self.population [self.num_parents:]
-        # print('after selection:', [x.fitness_score for x in self.population])
-        # print('select after:', len(self.population))
 
     def calculate_fitness(self, mutated_matrix):
         dist_matrix = self.run_nj_get_dist_matrix(mutated_matrix)
@@ -108,13 +120,12 @@ class GeneticAlgorithmRunner:
         seed_matrix = self.get_seed_matrix()
         self.add_to_population(seed_matrix)
 
+        # breed a sufficient number of children to get started
         while len(self.population) < self.num_parents:
             seed_descendant = self.mutate(seed_matrix)
             self.add_to_population(seed_descendant)
 
-        #self.print_population()
-
-    def get_best_fitness(self):
+    def get_best_fitness_from_population(self):
         return min(i.fitness_score for i in self.population)
 
     def run(self):
@@ -128,23 +139,19 @@ class GeneticAlgorithmRunner:
         for i in tqdm(range(self.num_iterations)):
             self.breed()
             self.select()
-            results.loc[i] = [i, time.time(), self.get_best_fitness()]
+            results.loc[i] = [i, time.time(), self.get_best_fitness_from_population()]
 
         return results
 
 
 class OptimizeMatrixCellGeneticRunner(GeneticAlgorithmRunner):
-    num_cells_to_mutate = 1
-
-    def top_n_indexes(self, arr, n):
-        idx = bn.argpartsort(arr, arr.size - n, axis=None)[-n:]
-        width = arr.shape[1]
-        return [divmod(i, width) for i in idx]
-
     ''''
     Algorithm #3: only mutate the cells that are more distant from
     the ground truth matrix
     '''
+
+    num_cells_to_mutate = 1
+
     def breed(self):
         # print("start breed")
         # create new children
@@ -177,6 +184,74 @@ class OptimizeMatrixCellGeneticRunner(GeneticAlgorithmRunner):
         return child_matrix
 
 
+class RandomGeneticRunner(GeneticAlgorithmRunner):
+    '''
+    Algo 1: mutacao: adicionar erro gaussiano (1 célula)
+    '''
+    def breed(self):
+        raise NotImplementedError()
+
+    def mutate(self, dist_matrix):
+        raise NotImplementedError()
+
+
+class MoveWeightsGeneticRunner(GeneticAlgorithmRunner):
+    '''
+    Algo 2: mutacao: mover peso de uma celula da matriz pra outro (1 celula)
+    '''
+    def breed(self):
+        raise NotImplementedError()
+
+    def mutate(self, dist_matrix):
+        raise NotImplementedError()
+
+
+class CrossoverAverageGeneticRunner(GeneticAlgorithmRunner):
+    '''
+    Algo 4: crossover: media par-a-par de 2 matrizes (Matriz1 + Matriz2 / 2)
+    '''
+    def breed(self):
+        all_pairwise_combinations = list(itertools.combinations(range(self.num_parents), 2))
+
+        # pick N distinct pairs of parents to breed
+        couples_indices = random.sample(all_pairwise_combinations, self.num_children)
+
+        for i, j in couples_indices:
+            child = self.reproduce(self.population[i].dist_matrix, self.population[j].dist_matrix)
+            self.add_to_population(child)
+
+    def reproduce(self, matrix1, matrix2):
+        '''
+        Returns child matrix
+        :param matrix1:
+        :param matrix2:
+        :return:
+        '''
+        return (matrix1 + matrix2) / 2
+
+
+class CrossoverMergeGeneticRunner(GeneticAlgorithmRunner):
+    '''
+    Algo 5: crossover: mergear partes de cada 2 matrizes (50%/50%) - rand(50%)
+    '''
+    def breed(self):
+        raise NotImplementedError()
+
+    def mutate(self, dist_matrix):
+        raise NotImplementedError()
+
+
+class AdvancedCrossoverGeneticRunner(GeneticAlgorithmRunner):
+    '''
+    Algo 6
+    '''
+    def breed(self):
+        raise NotImplementedError()
+
+    def mutate(self, dist_matrix):
+        raise NotImplementedError()
+
+
 def main(args):
     directory_path = args.in_data
     directory = os.fsencode(directory_path)
@@ -184,22 +259,58 @@ def main(args):
         filename = os.fsdecode(file)
         if filename.endswith("additive.noisy.npy"):
             dataset_matrix = np.load(os.path.join(directory_path, filename))
-            runner = OptimizeMatrixCellGeneticRunner(ground_truth_matrix=dataset_matrix,
-                                                     num_iterations=NUM_ITERATIONS,
-                                                     num_children=NUM_CHILDREN,
-                                                     num_parents=NUM_PARENTS
-                                                     )
+
+            if args.algo == 1:
+                runner = RandomGeneticRunner(ground_truth_matrix=dataset_matrix,
+                                             num_iterations=NUM_ITERATIONS,
+                                             num_children=NUM_CHILDREN,
+                                             num_parents=NUM_PARENTS
+                                             )
+            elif args.algo == 2:
+                runner = MoveWeightsGeneticRunner(ground_truth_matrix=dataset_matrix,
+                                             num_iterations=NUM_ITERATIONS,
+                                             num_children=NUM_CHILDREN,
+                                             num_parents=NUM_PARENTS
+                                             )
+            elif args.algo == 3:
+                runner = OptimizeMatrixCellGeneticRunner(ground_truth_matrix=dataset_matrix,
+                                                         num_iterations=NUM_ITERATIONS,
+                                                         num_children=NUM_CHILDREN,
+                                                         num_parents=NUM_PARENTS
+                                                         )
+            elif args.algo == 4:
+                runner = CrossoverAverageGeneticRunner(ground_truth_matrix=dataset_matrix,
+                                             num_iterations=NUM_ITERATIONS,
+                                             num_children=NUM_CHILDREN,
+                                             num_parents=NUM_PARENTS
+                                             )
+            elif args.algo == 5:
+                runner = CrossoverMergeGeneticRunner(ground_truth_matrix=dataset_matrix,
+                                             num_iterations=NUM_ITERATIONS,
+                                             num_children=NUM_CHILDREN,
+                                             num_parents=NUM_PARENTS
+                                             )
+            elif args.algo == 6:
+                runner = RandomGeneticRunner(ground_truth_matrix=dataset_matrix,
+                                             num_iterations=NUM_ITERATIONS,
+                                             num_children=NUM_CHILDREN,
+                                             num_parents=NUM_PARENTS
+                                             )
+            else:
+                raise Exception('You must pass argument --algo=<index>')
+
             results = runner.run()
             results['dataset'] = directory_path
             results['matrix'] = filename
+            results['algo'] = args.algo
             with open('run_results.csv', 'a') as f:
                 results.to_csv(f, header=False)
-
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Genetic algorithms to create phylogenetic trees.')
     parser.add_argument('--in-data', help='runs genetic algorithms using source data')
+    parser.add_argument('--algo', type=int)
     args = parser.parse_args()
     main(args)
 
