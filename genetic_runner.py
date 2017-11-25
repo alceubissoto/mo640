@@ -235,10 +235,34 @@ class CrossoverMergeGeneticRunner(GeneticAlgorithmRunner):
     Algo 5: crossover: mergear partes de cada 2 matrizes (50%/50%) - rand(50%)
     '''
     def breed(self):
-        raise NotImplementedError()
+        all_pairwise_combinations = list(itertools.combinations(range(self.num_parents), 2))
 
-    def mutate(self, dist_matrix):
-        raise NotImplementedError()
+        # pick N distinct pairs of parents to breed
+        couples_indices = random.sample(all_pairwise_combinations, self.num_children)
+
+        for i, j in couples_indices:
+            child = self.reproduce(self.population[i].dist_matrix, self.population[j].dist_matrix)
+            self.add_to_population(child)
+
+    def reproduce(self, matrix1, matrix2):
+        '''
+        Returns child matrix
+        :param matrix1:
+        :param matrix2:
+        :return:
+        '''
+        dim_matrix = matrix1.shape[0]
+        all_pairwise_combinations = list(itertools.combinations(range(dim_matrix), 2))
+        couples_indices = random.sample(all_pairwise_combinations, self.num_children)
+
+        # merge 50%/50% matrix 1 and 2
+        # overwrite 50% of the cells of the child with values from matrix2
+        child = np.copy(matrix1)
+        for i, j in couples_indices:
+            child[i, j] = matrix2[i, j]
+            child[j, i] = matrix2[j, i]
+
+        return child
 
 
 class AdvancedCrossoverGeneticRunner(GeneticAlgorithmRunner):
