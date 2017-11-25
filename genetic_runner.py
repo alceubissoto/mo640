@@ -10,7 +10,8 @@ import pandas as pd
 
 NUM_PARENTS = 5
 NUM_CHILDREN = 2
-NUM_ITERATIONS = 50
+NUM_ITERATIONS = 500
+SIGMA = 5
 
 class Individual:
     dist_matrix = None
@@ -82,8 +83,10 @@ class GeneticAlgorithmRunner:
         '''
         Select and maintain in the population only the best individuals
         '''
+        # print('select before:', len(self.population))
         self.population.sort(key=lambda x: x.fitness_score)
-        self.population = self.population[:self.num_parents]
+        del self.population [:-self.num_parents]
+        # print('select after:', len(self.population))
 
     def calculate_fitness(self, mutated_matrix):
         dist_matrix = self.run_nj_get_dist_matrix(mutated_matrix)
@@ -128,7 +131,6 @@ class GeneticAlgorithmRunner:
 
 class OptimizeMatrixCellGeneticRunner(GeneticAlgorithmRunner):
     num_cells_to_mutate = 1
-    sigma = 5
 
     def top_n_indexes(self, arr, n):
         idx = bn.argpartsort(arr, arr.size - n, axis=None)[-n:]
@@ -140,7 +142,7 @@ class OptimizeMatrixCellGeneticRunner(GeneticAlgorithmRunner):
     the ground truth matrix
     '''
     def breed(self):
-        print("start breed")
+        # print("start breed")
         # create new children
         new_children = list()
         for individual in self.population:
@@ -149,22 +151,23 @@ class OptimizeMatrixCellGeneticRunner(GeneticAlgorithmRunner):
                 new_children.append(child)
 
         # add to population
-        [self.add_to_population(child) for child in new_children]
+        for child in new_children:
+            self.add_to_population(child)
 
-        print("end breed")
+        # print("end breed")
 
     def mutate(self, dist_matrix):
-        print("start mutate")
+        # print("start mutate")
         diff_matrix = np.square(self.ground_truth_matrix - dist_matrix)
         a = diff_matrix
         i, j = np.unravel_index(a.argmax(), a.shape)
 
         # add noise to the cell with highest distance from the ground truth
         child_matrix = np.copy(dist_matrix)
-        noise = np.random.normal(loc=0.0, scale=self.sigma)
+        noise = np.random.normal(loc=0.0, scale=SIGMA)
         child_matrix[i, j] = child_matrix[i, j] + noise
         child_matrix[j, i] = child_matrix[j, i] + noise
-        print("end mutate")
+        # print("end mutate")
         return child_matrix
 
 
@@ -182,10 +185,10 @@ def main(args):
                                                      num_parents=NUM_PARENTS
                                                      )
             results = runner.run()
-            # results['dataset'] = directory_path
-            # results['matrix'] = filename
-            # with open('run_results.csv', 'a') as f:
-            #     results.to_csv(f, header=False)
+            results['dataset'] = directory_path
+            results['matrix'] = filename
+            with open('run_results.csv', 'a') as f:
+                results.to_csv(f, header=False)
 
 
 if __name__ == "__main__":
