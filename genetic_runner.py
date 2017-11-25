@@ -4,11 +4,13 @@ from skbio.tree import nj
 import argparse
 import os
 import bottleneck as bn
-
+import time
+from tqdm import tqdm
+import pandas as pd
 
 NUM_PARENTS = 5
 NUM_CHILDREN = 2
-NUM_ITERATIONS = 500
+NUM_ITERATIONS = 50
 
 class Individual:
     dist_matrix = None
@@ -103,26 +105,25 @@ class GeneticAlgorithmRunner:
             seed_descendant = self.mutate(seed_matrix)
             self.add_to_population(seed_descendant)
 
-        self.print_population()
+        #self.print_population()
 
     def get_best_fitness(self):
         return max(i.fitness_score for i in self.population)
 
     def run(self):
-        '''
-        Returns the matrix after running the breed and selection
-        several times.
-        All the parameters must be specified before calling this method.
-        :return:
-        '''
+        # results in a numpy matrix
+        results = pd.DataFrame(columns=['iteration', 'timestamp', 'best_fitness'])
+
         # breed a minimum number of parents to get started
         self.start_population()
 
         # iterate between breed and select
-        for i in range(self.num_iterations):
+        for i in tqdm(range(self.num_iterations)):
             self.breed()
             self.select()
-            print('best fitness:', self.get_best_fitness())
+            results.loc[i] = [i, time.time(), self.get_best_fitness()]
+
+        return results
 
 
 class OptimizeMatrixCellGeneticRunner(GeneticAlgorithmRunner):
@@ -139,6 +140,7 @@ class OptimizeMatrixCellGeneticRunner(GeneticAlgorithmRunner):
     the ground truth matrix
     '''
     def breed(self):
+        print("start breed")
         # create new children
         new_children = list()
         for individual in self.population:
@@ -149,7 +151,10 @@ class OptimizeMatrixCellGeneticRunner(GeneticAlgorithmRunner):
         # add to population
         [self.add_to_population(child) for child in new_children]
 
+        print("end breed")
+
     def mutate(self, dist_matrix):
+        print("start mutate")
         diff_matrix = np.square(self.ground_truth_matrix - dist_matrix)
         a = diff_matrix
         i, j = np.unravel_index(a.argmax(), a.shape)
@@ -159,6 +164,7 @@ class OptimizeMatrixCellGeneticRunner(GeneticAlgorithmRunner):
         noise = np.random.normal(loc=0.0, scale=self.sigma)
         child_matrix[i, j] = child_matrix[i, j] + noise
         child_matrix[j, i] = child_matrix[j, i] + noise
+        print("end mutate")
         return child_matrix
 
 
@@ -168,15 +174,18 @@ def main(args):
     for file in os.listdir(directory):
         filename = os.fsdecode(file)
         if filename.endswith("additive.noisy.npy"):
+            print('file:', filename)
             dataset_matrix = np.load(os.path.join(directory_path, filename))
             runner = OptimizeMatrixCellGeneticRunner(ground_truth_matrix=dataset_matrix,
                                                      num_iterations=NUM_ITERATIONS,
                                                      num_children=NUM_CHILDREN,
                                                      num_parents=NUM_PARENTS
                                                      )
-            runner.run()
-
-            break
+            results = runner.run()
+            # results['dataset'] = directory_path
+            # results['matrix'] = filename
+            # with open('run_results.csv', 'a') as f:
+            #     results.to_csv(f, header=False)
 
 
 if __name__ == "__main__":
