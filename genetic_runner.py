@@ -12,7 +12,7 @@ NUM_ITERATIONS = 500
 
 class Individual:
     dist_matrix = None
-    fitness_score = 0
+    fitness_score = 0 # sum of the squares of distances between this individual and ground truth matrix
 
     def __init__(self, dist_matrix, fitness):
         self.dist_matrix = dist_matrix
@@ -37,25 +37,28 @@ class GeneticAlgorithmRunner:
         self.num_children = num_children
         self.num_parents = num_parents
 
+    def run_nj_get_dist_matrix(self, dist_matrix):
+        dm = DistanceMatrix(dist_matrix)
+
+        # run neighbor join and get dist matrix from the tree
+        nj_tree = nj(dm)
+        df = nj_tree.tip_tip_distances().to_data_frame()
+        df.index = df.index.astype(int)
+
+        # sort rows and cols
+        df.sort_index(inplace=True)
+        df.columns = df.columns.values.astype(np.int32)
+        df = df[sorted(df.columns)]
+
+        return df.as_matrix()
+
     def get_seed_matrix(self):
         '''
         Run neighbor join once and return dist matrix
         :return:
         '''
         if self.seed_matrix is None:
-            dm = DistanceMatrix(self.ground_truth_matrix)
-
-            # run neighbor join and get dist matrix from the tree
-            nj_tree = nj(dm)
-            df = nj_tree.tip_tip_distances().to_data_frame()
-            df.index = df.index.astype(int)
-
-            # sort rows and cols
-            df.sort_index(inplace=True)
-            df.columns = df.columns.values.astype(np.int32)
-            df = df[sorted(df.columns)]
-
-            self.seed_matrix = df.as_matrix()
+            self.seed_matrix = self.run_nj_get_dist_matrix(self.ground_truth_matrix)
 
         return self.seed_matrix
 
@@ -73,14 +76,15 @@ class GeneticAlgorithmRunner:
         '''
         raise NotImplementedError("Please Implement this method in child class")
 
-    def select(self, population):
+    def select(self):
         '''
-        Returns list of descendents that will be passed on to the next iteration
-        :return:
+        Select and maintain in the population only the best individuals
         '''
-        self.population = self.population.sort(key=lambda x: x.fitness_score, reverse=True)[self.num_parents:]
+        self.population.sort(key=lambda x: x.fitness_score)
+        self.population = self.population[:self.num_parents]
 
-    def calculate_fitness(self, dist_matrix):
+    def calculate_fitness(self, mutated_matrix):
+        dist_matrix = self.run_nj_get_dist_matrix(mutated_matrix)
         return np.square(self.ground_truth_matrix - dist_matrix).sum()
 
     def add_to_population(self, dist_matrix):
@@ -101,10 +105,8 @@ class GeneticAlgorithmRunner:
 
         self.print_population()
 
-
     def get_best_fitness(self):
         return max(i.fitness_score for i in self.population)
-
 
     def run(self):
         '''
@@ -118,7 +120,6 @@ class GeneticAlgorithmRunner:
 
         # iterate between breed and select
         for i in range(self.num_iterations):
-            print(i)
             self.breed()
             self.select()
             print('best fitness:', self.get_best_fitness())
@@ -138,11 +139,15 @@ class OptimizeMatrixCellGeneticRunner(GeneticAlgorithmRunner):
     the ground truth matrix
     '''
     def breed(self):
-        print("len population", len(self.population))
+        # create new children
+        new_children = list()
         for individual in self.population:
             for i in range(self.num_children):
                 child = self.mutate(individual.dist_matrix)
-                self.add_to_population(child)
+                new_children.append(child)
+
+        # add to population
+        [self.add_to_population(child) for child in new_children]
 
     def mutate(self, dist_matrix):
         diff_matrix = np.square(self.ground_truth_matrix - dist_matrix)
@@ -151,8 +156,9 @@ class OptimizeMatrixCellGeneticRunner(GeneticAlgorithmRunner):
 
         # add noise to the cell with highest distance from the ground truth
         child_matrix = np.copy(dist_matrix)
-        child_matrix[i, j] = child_matrix[i, j] + np.random.normal(loc=0.0, scale=self.sigma)
-
+        noise = np.random.normal(loc=0.0, scale=self.sigma)
+        child_matrix[i, j] = child_matrix[i, j] + noise
+        child_matrix[j, i] = child_matrix[j, i] + noise
         return child_matrix
 
 
