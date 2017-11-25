@@ -83,9 +83,13 @@ class GeneticAlgorithmRunner:
         '''
         Select and maintain in the population only the best individuals
         '''
-        # print('select before:', len(self.population))
+
         self.population.sort(key=lambda x: x.fitness_score)
-        del self.population [:-self.num_parents]
+
+        # print('select before:', len(self.population))
+        # print('before selection:', [x.fitness_score for x in self.population])
+        del self.population [self.num_parents:]
+        # print('after selection:', [x.fitness_score for x in self.population])
         # print('select after:', len(self.population))
 
     def calculate_fitness(self, mutated_matrix):
@@ -111,7 +115,7 @@ class GeneticAlgorithmRunner:
         #self.print_population()
 
     def get_best_fitness(self):
-        return max(i.fitness_score for i in self.population)
+        return min(i.fitness_score for i in self.population)
 
     def run(self):
         # results in a numpy matrix
@@ -154,20 +158,22 @@ class OptimizeMatrixCellGeneticRunner(GeneticAlgorithmRunner):
         for child in new_children:
             self.add_to_population(child)
 
-        # print("end breed")
-
     def mutate(self, dist_matrix):
-        # print("start mutate")
         diff_matrix = np.square(self.ground_truth_matrix - dist_matrix)
-        a = diff_matrix
-        i, j = np.unravel_index(a.argmax(), a.shape)
-
-        # add noise to the cell with highest distance from the ground truth
         child_matrix = np.copy(dist_matrix)
         noise = np.random.normal(loc=0.0, scale=SIGMA)
-        child_matrix[i, j] = child_matrix[i, j] + noise
-        child_matrix[j, i] = child_matrix[j, i] + noise
-        # print("end mutate")
+
+        # this returns a list of indices of the highest elements
+        # the indices are the matrix in a flattened array
+        # we are multiplying by 2 because this is a symmetric matrix so there are 2
+        # equal values always
+        indices = np.argsort(diff_matrix, axis=None)[-(self.num_cells_to_mutate*2):]
+        for ind in indices:
+            i, j = np.unravel_index(ind, diff_matrix.shape)
+
+            # add noise to the cell with highest distance from the ground truth
+            child_matrix[i, j] = child_matrix[i, j] + noise
+
         return child_matrix
 
 
@@ -177,7 +183,6 @@ def main(args):
     for file in os.listdir(directory):
         filename = os.fsdecode(file)
         if filename.endswith("additive.noisy.npy"):
-            print('file:', filename)
             dataset_matrix = np.load(os.path.join(directory_path, filename))
             runner = OptimizeMatrixCellGeneticRunner(ground_truth_matrix=dataset_matrix,
                                                      num_iterations=NUM_ITERATIONS,
@@ -189,6 +194,7 @@ def main(args):
             results['matrix'] = filename
             with open('run_results.csv', 'a') as f:
                 results.to_csv(f, header=False)
+
 
 
 if __name__ == "__main__":
