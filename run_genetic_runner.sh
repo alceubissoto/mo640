@@ -1,0 +1,1 @@
+python3.6 genetic_runner.py --in-data=data14 --algo=1 --out=results_algo1.csv
