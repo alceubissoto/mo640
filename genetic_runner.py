@@ -13,6 +13,7 @@ NUM_PARENTS = 5
 NUM_CHILDREN = 2
 NUM_ITERATIONS = 500
 SIGMA = 5
+NUM_CELLS_TO_MUTATE = 2
 
 class Individual:
     dist_matrix = None
@@ -42,6 +43,12 @@ class GeneticAlgorithmRunner:
         self.num_parents = num_parents
 
     def run_nj_get_dist_matrix(self, dist_matrix):
+        for i in range(dist_matrix.shape[0]):
+            for j in range(dist_matrix.shape[0]):
+                if dist_matrix[i,j] != dist_matrix[j,i]:
+                    print('BUSTED:', i, j, dist_matrix[i,j])
+
+        print(dist_matrix.astype(np.int))
         dm = DistanceMatrix(dist_matrix)
 
         # run neighbor join and get dist matrix from the tree
@@ -67,25 +74,32 @@ class GeneticAlgorithmRunner:
         return self.seed_matrix
 
     def mutate(self, dist_matrix):
-        '''
-        Randomly mutate some cells
-        :return:
-        '''
+        already_mutated = set()
+
         diff_matrix = np.square(self.ground_truth_matrix - dist_matrix)
         child_matrix = np.copy(dist_matrix)
-        noise = np.random.normal(loc=0.0, scale=SIGMA)
+
 
         # this returns a list of indices of the highest elements
         # the indices are the matrix in a flattened array
         # we are multiplying by 2 because this is a symmetric matrix so there are 2
         # equal values always
-        num_cells_to_mutate = 5
-        indices = np.argsort(diff_matrix, axis=None)[-(num_cells_to_mutate*2):]
+        # diff_matrix is negative here cause I want argsort in reverse order
+        indices = np.argsort(-diff_matrix, axis=None)
         for ind in indices:
-            i, j = np.unravel_index(ind, diff_matrix.shape)
+            if len(already_mutated) > NUM_CELLS_TO_MUTATE*2:
+                # we have already mutated enough cells, stop
+                break
 
-            # add noise to the cell with highest distance from the ground truth
-            child_matrix[i, j] = child_matrix[i, j] + noise
+            i, j = np.unravel_index(ind, diff_matrix.shape)
+            if (i, j) not in already_mutated:
+                noise = np.random.normal(loc=0.0, scale=SIGMA)
+
+                # add noise to the cell with highest distance from the ground truth
+                child_matrix[i, j] += noise
+                child_matrix[j, i] += noise
+                already_mutated.add((i, j))
+                already_mutated.add((j, i))
 
         return child_matrix
 
@@ -149,7 +163,6 @@ class OptimizeMatrixCellGeneticRunner(GeneticAlgorithmRunner):
     Algorithm #3: only mutate the cells that are more distant from
     the ground truth matrix
     '''
-
     num_cells_to_mutate = 1
 
     def breed(self):
@@ -164,24 +177,6 @@ class OptimizeMatrixCellGeneticRunner(GeneticAlgorithmRunner):
         # add to population
         for child in new_children:
             self.add_to_population(child)
-
-    def mutate(self, dist_matrix):
-        diff_matrix = np.square(self.ground_truth_matrix - dist_matrix)
-        child_matrix = np.copy(dist_matrix)
-        noise = np.random.normal(loc=0.0, scale=SIGMA)
-
-        # this returns a list of indices of the highest elements
-        # the indices are the matrix in a flattened array
-        # we are multiplying by 2 because this is a symmetric matrix so there are 2
-        # equal values always
-        indices = np.argsort(diff_matrix, axis=None)[-(self.num_cells_to_mutate*2):]
-        for ind in indices:
-            i, j = np.unravel_index(ind, diff_matrix.shape)
-
-            # add noise to the cell with highest distance from the ground truth
-            child_matrix[i, j] = child_matrix[i, j] + noise
-
-        return child_matrix
 
 
 class RandomGeneticRunner(GeneticAlgorithmRunner):
@@ -327,13 +322,14 @@ def main(args):
             results['dataset'] = directory_path
             results['matrix'] = filename
             results['algo'] = args.algo
-            with open('run_results.csv', 'a') as f:
+            with open(args.out, 'a') as f:
                 results.to_csv(f, header=False)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Genetic algorithms to create phylogenetic trees.')
     parser.add_argument('--in-data', help='runs genetic algorithms using source data')
+    parser.add_argument('--out', help='path to CSV containing the results')
     parser.add_argument('--algo', type=int)
     args = parser.parse_args()
     main(args)
