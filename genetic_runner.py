@@ -43,12 +43,6 @@ class GeneticAlgorithmRunner:
         self.num_parents = num_parents
 
     def run_nj_get_dist_matrix(self, dist_matrix):
-        for i in range(dist_matrix.shape[0]):
-            for j in range(dist_matrix.shape[0]):
-                if dist_matrix[i,j] != dist_matrix[j,i]:
-                    print('BUSTED:', i, j, dist_matrix[i,j])
-
-        print(dist_matrix.astype(np.int))
         dm = DistanceMatrix(dist_matrix)
 
         # run neighbor join and get dist matrix from the tree
