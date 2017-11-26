@@ -41,6 +41,8 @@ class GeneticAlgorithmRunner:
         self.num_iterations = num_iterations
         self.num_children = num_children
         self.num_parents = num_parents
+        self.population = list()
+        self.seed_matrix = None
 
     def run_nj_get_dist_matrix(self, dist_matrix):
         dm = DistanceMatrix(dist_matrix)
