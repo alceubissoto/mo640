@@ -157,10 +157,7 @@ class OptimizeMatrixCellGeneticRunner(GeneticAlgorithmRunner):
     Algorithm #3: only mutate the cells that are more distant from
     the ground truth matrix
     '''
-    num_cells_to_mutate = 1
-
     def breed(self):
-        # print("start breed")
         # create new children
         new_children = list()
         for individual in self.population:
@@ -173,15 +170,44 @@ class OptimizeMatrixCellGeneticRunner(GeneticAlgorithmRunner):
             self.add_to_population(child)
 
 
+def random_pick_dist_matrix_cell(dim_matrix, num_cells_to_pick):
+    '''
+    Returns N (num_cells_to_picks) indices of cells randomly picked
+    Diagonals are NOT returned
+    Symmetric cells are NOT returned
+    :param dim_matrix:
+    :param num_cells_to_pick:
+    :return:
+    '''
+    all_pairwise_combinations = list(itertools.combinations(range(dim_matrix), 2))
+    cell_indices = random.sample(all_pairwise_combinations, num_cells_to_pick)
+    return cell_indices
+
 class RandomGeneticRunner(GeneticAlgorithmRunner):
     '''
     Algo 1: mutacao: adicionar erro gaussiano (1 célula)
     '''
     def breed(self):
-        raise NotImplementedError()
+        # create new children
+        new_children = list()
+        for individual in self.population:
+            for i in range(self.num_children):
+                child = self.mutate(individual.dist_matrix)
+                new_children.append(child)
+
+        # add to population
+        for child in new_children:
+            self.add_to_population(child)
 
     def mutate(self, dist_matrix):
-        raise NotImplementedError()
+        indices = random_pick_dist_matrix_cell(dist_matrix.shape[0], NUM_CELLS_TO_MUTATE)
+        child_matrix = np.copy(dist_matrix)
+        for i, j in indices:
+            noise = np.random.normal(loc=0.0, scale=SIGMA)
+            child_matrix[i,j] += noise
+            child_matrix[j,i] += noise
+
+        return child_matrix
 
 
 class MoveWeightsGeneticRunner(GeneticAlgorithmRunner):
@@ -189,10 +215,33 @@ class MoveWeightsGeneticRunner(GeneticAlgorithmRunner):
     Algo 2: mutacao: mover peso de uma celula da matriz pra outro (1 celula)
     '''
     def breed(self):
-        raise NotImplementedError()
+        # create new children
+        new_children = list()
+        for individual in self.population:
+            for i in range(self.num_children):
+                child = self.mutate(individual.dist_matrix)
+                new_children.append(child)
+
+        # add to population
+        for child in new_children:
+            self.add_to_population(child)
 
     def mutate(self, dist_matrix):
-        raise NotImplementedError()
+        indices = random_pick_dist_matrix_cell(dist_matrix.shape[0], NUM_CELLS_TO_MUTATE*2)
+        child_matrix = np.copy(dist_matrix)
+        subtracting = True # flag switches between subtracting and summing
+        for i, j in indices:
+            noise = np.random.normal(loc=0.0, scale=SIGMA)
+            if subtracting:
+                child_matrix[i,j] -= noise
+                child_matrix[j,i] -= noise
+                subtracting = False
+            else:
+                child_matrix[i,j] += noise
+                child_matrix[j,i] += noise
+                subtracting = True
+
+        return child_matrix
 
 
 class CrossoverAverageGeneticRunner(GeneticAlgorithmRunner):
@@ -241,8 +290,7 @@ class CrossoverMergeGeneticRunner(GeneticAlgorithmRunner):
         :return:
         '''
         dim_matrix = matrix1.shape[0]
-        all_pairwise_combinations = list(itertools.combinations(range(dim_matrix), 2))
-        couples_indices = random.sample(all_pairwise_combinations, self.num_children)
+        couples_indices = random_pick_dist_matrix_cell(dim_matrix, self.num_children)
 
         # merge 50%/50% matrix 1 and 2
         # overwrite 50% of the cells of the child with values from matrix2
