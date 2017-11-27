@@ -13,7 +13,8 @@ NUM_PARENTS = 5
 NUM_CHILDREN = 2
 NUM_ITERATIONS = 500
 SIGMA = 5
-NUM_CELLS_TO_MUTATE = 2
+NUM_CELLS_TO_MUTATE = 1
+
 
 class Individual:
     dist_matrix = None
@@ -74,7 +75,6 @@ class GeneticAlgorithmRunner:
 
         diff_matrix = np.square(self.ground_truth_matrix - dist_matrix)
         child_matrix = np.copy(dist_matrix)
-
 
         # this returns a list of indices of the highest elements
         # the indices are the matrix in a flattened array
