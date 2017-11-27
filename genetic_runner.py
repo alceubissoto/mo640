@@ -254,11 +254,30 @@ class CrossoverAverageGeneticRunner(GeneticAlgorithmRunner):
         all_pairwise_combinations = list(itertools.combinations(range(self.num_parents), 2))
 
         # pick N distinct pairs of parents to breed
-        couples_indices = random.sample(all_pairwise_combinations, self.num_children)
+        #couples_indices = random.sample(all_pairwise_combinations, self.num_children)
+        couples_indices = random.sample(all_pairwise_combinations, 2)
 
         for i, j in couples_indices:
             child = self.reproduce(self.population[i].dist_matrix, self.population[j].dist_matrix)
-            self.add_to_population(child)
+            for k in range(5):
+                mutated_child = self.mutate(child)
+                self.add_to_population(mutated_child)
+
+
+        # for i, j in couples_indices:
+        #     child = self.reproduce(self.population[i].dist_matrix, self.population[j].dist_matrix)
+        #     child = self.mutate(child)
+        #     self.add_to_population(child)
+
+    def mutate(self, dist_matrix):
+        indices = random_pick_dist_matrix_cell(dist_matrix.shape[0], NUM_CELLS_TO_MUTATE)
+        child_matrix = np.copy(dist_matrix)
+        for i, j in indices:
+            noise = np.random.normal(loc=0.0, scale=SIGMA)
+            child_matrix[i,j] += noise
+            child_matrix[j,i] += noise
+
+        return child_matrix
 
     def reproduce(self, matrix1, matrix2):
         '''
@@ -278,11 +297,19 @@ class CrossoverMergeGeneticRunner(GeneticAlgorithmRunner):
         all_pairwise_combinations = list(itertools.combinations(range(self.num_parents), 2))
 
         # pick N distinct pairs of parents to breed
-        couples_indices = random.sample(all_pairwise_combinations, self.num_children)
+        #couples_indices = random.sample(all_pairwise_combinations, self.num_children)
+        couples_indices = random.sample(all_pairwise_combinations, 2)
 
         for i, j in couples_indices:
             child = self.reproduce(self.population[i].dist_matrix, self.population[j].dist_matrix)
-            self.add_to_population(child)
+            for k in range(5):
+                mutated_child = self.mutate(child)
+                self.add_to_population(mutated_child)
+
+        # for i, j in couples_indices:
+        #     child = self.reproduce(self.population[i].dist_matrix, self.population[j].dist_matrix)
+        #     child = self.mutate(child)
+        #     self.add_to_population(child)
 
     def reproduce(self, matrix1, matrix2):
         '''
@@ -303,16 +330,15 @@ class CrossoverMergeGeneticRunner(GeneticAlgorithmRunner):
 
         return child
 
-
-class AdvancedCrossoverGeneticRunner(GeneticAlgorithmRunner):
-    '''
-    Algo 6
-    '''
-    def breed(self):
-        raise NotImplementedError()
-
     def mutate(self, dist_matrix):
-        raise NotImplementedError()
+        indices = random_pick_dist_matrix_cell(dist_matrix.shape[0], NUM_CELLS_TO_MUTATE)
+        child_matrix = np.copy(dist_matrix)
+        for i, j in indices:
+            noise = np.random.normal(loc=0.0, scale=SIGMA)
+            child_matrix[i,j] += noise
+            child_matrix[j,i] += noise
+
+        return child_matrix
 
 
 def main(args):
@@ -349,12 +375,6 @@ def main(args):
                                              )
             elif args.algo == 5:
                 runner = CrossoverMergeGeneticRunner(ground_truth_matrix=dataset_matrix,
-                                             num_iterations=NUM_ITERATIONS,
-                                             num_children=NUM_CHILDREN,
-                                             num_parents=NUM_PARENTS
-                                             )
-            elif args.algo == 6:
-                runner = RandomGeneticRunner(ground_truth_matrix=dataset_matrix,
                                              num_iterations=NUM_ITERATIONS,
                                              num_children=NUM_CHILDREN,
                                              num_parents=NUM_PARENTS
