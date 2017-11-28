@@ -254,20 +254,13 @@ class CrossoverAverageGeneticRunner(GeneticAlgorithmRunner):
         all_pairwise_combinations = list(itertools.combinations(range(self.num_parents), 2))
 
         # pick N distinct pairs of parents to breed
-        #couples_indices = random.sample(all_pairwise_combinations, self.num_children)
-        couples_indices = random.sample(all_pairwise_combinations, 2)
+        couples_indices = random.sample(all_pairwise_combinations, self.num_children)
 
         for i, j in couples_indices:
             child = self.reproduce(self.population[i].dist_matrix, self.population[j].dist_matrix)
-            for k in range(5):
-                mutated_child = self.mutate(child)
-                self.add_to_population(mutated_child)
+            child = self.mutate(child)
+            self.add_to_population(child)
 
-
-        # for i, j in couples_indices:
-        #     child = self.reproduce(self.population[i].dist_matrix, self.population[j].dist_matrix)
-        #     child = self.mutate(child)
-        #     self.add_to_population(child)
 
     def mutate(self, dist_matrix):
         indices = random_pick_dist_matrix_cell(dist_matrix.shape[0], NUM_CELLS_TO_MUTATE)
@@ -297,19 +290,12 @@ class CrossoverMergeGeneticRunner(GeneticAlgorithmRunner):
         all_pairwise_combinations = list(itertools.combinations(range(self.num_parents), 2))
 
         # pick N distinct pairs of parents to breed
-        #couples_indices = random.sample(all_pairwise_combinations, self.num_children)
-        couples_indices = random.sample(all_pairwise_combinations, 2)
+        couples_indices = random.sample(all_pairwise_combinations, self.num_children)
 
         for i, j in couples_indices:
             child = self.reproduce(self.population[i].dist_matrix, self.population[j].dist_matrix)
-            for k in range(5):
-                mutated_child = self.mutate(child)
-                self.add_to_population(mutated_child)
-
-        # for i, j in couples_indices:
-        #     child = self.reproduce(self.population[i].dist_matrix, self.population[j].dist_matrix)
-        #     child = self.mutate(child)
-        #     self.add_to_population(child)
+            child = self.mutate(child)
+            self.add_to_population(child)
 
     def reproduce(self, matrix1, matrix2):
         '''
@@ -319,7 +305,7 @@ class CrossoverMergeGeneticRunner(GeneticAlgorithmRunner):
         :return:
         '''
         dim_matrix = matrix1.shape[0]
-        couples_indices = random_pick_dist_matrix_cell(dim_matrix, self.num_children)
+        couples_indices = random_pick_dist_matrix_cell(dim_matrix, int((dim_matrix**2 - dim_matrix)/4))
 
         # merge 50%/50% matrix 1 and 2
         # overwrite 50% of the cells of the child with values from matrix2
@@ -397,4 +383,3 @@ if __name__ == "__main__":
     parser.add_argument('--algo', type=int)
     args = parser.parse_args()
     main(args)
-
