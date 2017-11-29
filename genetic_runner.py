@@ -11,7 +11,7 @@ import random
 
 NUM_PARENTS = 5
 NUM_CHILDREN = 2
-NUM_ITERATIONS = 500
+#NUM_ITERATIONS = 500
 SIGMA = 5
 NUM_CELLS_TO_MUTATE = 1
 
@@ -254,7 +254,7 @@ class CrossoverAverageGeneticRunner(GeneticAlgorithmRunner):
         all_pairwise_combinations = list(itertools.combinations(range(self.num_parents), 2))
 
         # pick N distinct pairs of parents to breed
-        couples_indices = random.sample(all_pairwise_combinations, self.num_children)
+        couples_indices = random.sample(all_pairwise_combinations, self.num_children*self.num_parents)
 
         for i, j in couples_indices:
             child = self.reproduce(self.population[i].dist_matrix, self.population[j].dist_matrix)
@@ -290,13 +290,14 @@ class CrossoverMergeGeneticRunner(GeneticAlgorithmRunner):
         all_pairwise_combinations = list(itertools.combinations(range(self.num_parents), 2))
 
         # pick N distinct pairs of parents to breed
-        couples_indices = random.sample(all_pairwise_combinations, self.num_children)
+        couples_indices = random.sample(all_pairwise_combinations, self.num_children*self.num_parents)
 
         for i, j in couples_indices:
             child = self.reproduce(self.population[i].dist_matrix, self.population[j].dist_matrix)
             child = self.mutate(child)
             self.add_to_population(child)
 
+        print(len(self.population))
     def reproduce(self, matrix1, matrix2):
         '''
         Returns child matrix
@@ -382,7 +383,7 @@ if __name__ == "__main__":
     parser.add_argument('--in-data', help='runs genetic algorithms using source data')
     parser.add_argument('--out', help='path to CSV containing the results')
     parser.add_argument('--algo', type=int)
-    args = parser.parse_args()
     global NUM_ITERATIONS
+    args = parser.parse_args()
     NUM_ITERATIONS = args.iter
     main(args)
