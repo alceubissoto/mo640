@@ -378,8 +378,11 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Genetic algorithms to create phylogenetic trees.')
+    parser.add_argument('--iter', type=int, help='runs the algorithm for this number of iterations')
     parser.add_argument('--in-data', help='runs genetic algorithms using source data')
     parser.add_argument('--out', help='path to CSV containing the results')
     parser.add_argument('--algo', type=int)
     args = parser.parse_args()
+    global NUM_ITERATIONS
+    NUM_ITERATIONS = args.iter
     main(args)
