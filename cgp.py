@@ -16,8 +16,8 @@ import pandas as pd
 from bokeh.plotting import figure, output_file, show
 
 # Seria interessante receber os parametros antes da execucao
-ind_size = 100   # Size of every individual
-input_amount = 10 # Amount of inputs
+ind_size = 1000   # Size of every individual
+input_amount = 30 # Amount of inputs
 func_amount = 2  # Amount of functions STILL NEED TO DEFINE THESE
 pop_size = 10     # Population Size
 # Talvez as operacoes devessem ser já formatos de arvores (uniao de varios nos)..
@@ -29,11 +29,16 @@ def create_new_individual():
     operators = list(range(0, func_amount))
     last = input_amount -1;
     for i in range(0, ind_size):
-        #tmp_value = random.choice(possible_nodes)
         new_ind['genotype'].append(random.choice(possible_nodes))
-        #if tmp_value < input_amount:
-        #    possible_values.pop(tmp_value)
-        new_ind['genotype'].append(random.choice(possible_nodes))
+
+        if i > 0:
+            tmp_value = input_amount -1
+            while(tmp_value < input_amount):
+                tmp_value = random.choice(possible_nodes)
+                new_ind['genotype'].append(tmp_value)
+        else:
+            new_ind['genotype'].append(random.choice(possible_nodes))
+
         new_ind['genotype'].append(random.choice(operators))
         last+=1
         possible_nodes.append(last)
