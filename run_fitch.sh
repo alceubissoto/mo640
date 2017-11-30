@@ -1,0 +1,1 @@
+python3.6 phylip.py --input=data1

@@ -1,0 +1,55 @@
+
+  10 Populations
+
+Neighbor-Joining/UPGMA method version 3.695
+
+
+ Neighbor-joining method
+
+ Negative branch lengths allowed
+
+
+                                                       +-----Object002 
+                                             +---------1 
+                                +------------2         +-----Object005 
+                                !            ! 
+               +----------------3            +------Object004 
+               !                ! 
+      +--------4                +----------------Object006 
+      !        ! 
+  +---5        +----------Object009 
+  !   ! 
+  !   +--------------------Object008 
+  ! 
+  ! +---Object003 
+  7-8 
+  ! ! +--------Object007 
+  ! +-6 
+  !   +---------Object010 
+  ! 
+  +----Object001 
+
+
+remember: this is an unrooted tree!
+
+Between        And            Length
+-------        ---            ------
+   7             5           38.29688
+   5             4           88.09375
+   4             3          159.98750
+   3             2          126.72917
+   2             1           97.71429
+   1          Object002      52.50000
+   1          Object005      55.50000
+   2          Object004      68.28571
+   3          Object006     161.02083
+   4          Object009     108.26250
+   5          Object008     200.59375
+   7             8            8.07812
+   8          Object003      33.35938
+   8             6           16.14062
+   6          Object007      80.64583
+   6          Object010      95.35417
+   7          Object001      47.17188
+
+
