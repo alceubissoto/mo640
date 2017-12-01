@@ -116,7 +116,8 @@ if __name__ == "__main__":
     # run experiments
     results = run_phylip(args)
 
-    with open('results_phylip.csv', 'w') as f:
-        results.to_csv(f, header=True)
+    # Header is: 'matrix', 'location', 'nj_fitness', 'fitch_fitness'
+    with open('results_phylip.csv', 'a') as f:
+        results.to_csv(f, header=False)
 
     print('Results outputted to results_phylip.csv')
