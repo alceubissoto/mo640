@@ -1,0 +1,62 @@
+
+  10 Populations
+
+Fitch-Margoliash method version 3.695
+
+                  __ __             2
+                  \  \   (Obs - Exp)
+Sum of squares =  /_ /_  ------------
+                                2
+                   i  j      Obs
+
+Negative branch lengths not allowed
+
+
+  +----------------object009 
+  ! 
+  !                                       +------------------object008 
+  !                                   +---7 
+  !                             +-----6   +---object007 
+  !                             !     ! 
+  !              +--------------5     +-------------object006 
+  !              !              ! 
+  !              !              !        +--------------------object005 
+  !              !              +--------4 
+  8--------------3                       +-------------object004 
+  !              ! 
+  !              !                    +------------object003 
+  !              !           +--------2 
+  !              +-----------1        +---object001 
+  !                          ! 
+  !                          +------------------object002 
+  ! 
+  +-------object000 
+
+
+remember: this is an unrooted tree!
+
+Sum of squares =     0.78096
+
+Average percent standard deviation =     9.42046
+
+Between        And            Length
+-------        ---            ------
+   8          object009       119.53847
+   8             3             99.37827
+   3             5            101.60906
+   5             6             39.27290
+   6             7             28.37242
+   7          object008       127.69042
+   7          object007        24.30958
+   6          object006        93.12083
+   5             4             64.53417
+   4          object005       144.99707
+   4          object004        97.00293
+   3             1             83.53999
+   1             2             62.28507
+   2          object003        92.21819
+   2          object001        24.78181
+   1          object002       127.53421
+   8          object000        51.46153
+
+

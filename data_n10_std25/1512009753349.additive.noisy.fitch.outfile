@@ -1,0 +1,62 @@
+
+  10 Populations
+
+Fitch-Margoliash method version 3.695
+
+                  __ __             2
+                  \  \   (Obs - Exp)
+Sum of squares =  /_ /_  ------------
+                                2
+                   i  j      Obs
+
+Negative branch lengths not allowed
+
+
+  +---------object008 
+  ! 
+  !                                                 +---------object009 
+  !                                          +------8 
+  !                              +-----------6      +--------object007 
+  !                              !           ! 
+  !                              !           +------------------object006 
+  !                            +-2 
+  !                            ! !   +------------------object005 
+  !                            ! ! +-4 
+  !                   +--------3 +-5 +------------object004 
+  !                   !        !   ! 
+  !                   !        !   +-----------------object003 
+  7-------------------1        ! 
+  !                   !        +---object001 
+  !                   ! 
+  !                   +-----object002 
+  ! 
+  +---------object000 
+
+
+remember: this is an unrooted tree!
+
+Sum of squares =     0.20551
+
+Average percent standard deviation =     4.83251
+
+Between        And            Length
+-------        ---            ------
+   7          object008        83.83047
+   7             1            169.28738
+   1             3             74.07879
+   3             2              7.00926
+   2             6            101.04754
+   6             8             64.85591
+   8          object009        83.61021
+   8          object007        78.38979
+   6          object006       167.81419
+   2             5              2.23224
+   5             4             12.89199
+   4          object005       165.15365
+   4          object004       112.84635
+   5          object003       158.41462
+   3          object001        31.08987
+   1          object002        53.65158
+   7          object000        84.16953
+
+
