@@ -1,0 +1,98 @@
+
+  19 Populations
+
+Fitch-Margoliash method version 3.695
+
+                  __ __             2
+                  \  \   (Obs - Exp)
+Sum of squares =  /_ /_  ------------
+                                2
+                   i  j      Obs
+
+Negative branch lengths not allowed
+
+
+        +object014 
+  +----13  
+  !     +object007 
+  ! 
+  !                            +object018 
+  !                         +-17  
+  !                         !  !  +object017 
+  !                         !  +-16  
+  !                         !     !                  +---------object009 
+  !                         !     +------------------8 
+  !                         !                        !  +object013 
+  !               +---------5                        +-12  
+  !               !         !                           +object006 
+  !               !         ! 
+  !               !         !               +object016 
+  !            +-14         !            +-15  
+  !            !  !         +------------3  +object004 
+  !            !  !                      ! 
+  !            !  !                      +----------------object003 
+  !            !  !  
+  !            !  +object015 
+  6------------2 
+  !            !                                 +object011 
+  !            !                +----------------7 
+  !            !                !                !   +--------object008 
+  !            !                !                +--10  
+  !            +----------------1                    +-------object001 
+  !                             ! 
+  !                             !  +object012 
+  !                             +-11  
+  !                                !    +------------object005 
+  !                                +----4 
+  !                                     ! +object010 
+  !                                     +-9 
+  !                                       +-object002 
+  ! 
+  +----------------object000 
+
+
+remember: this is an unrooted tree!
+
+Sum of squares =     8.37238
+
+Average percent standard deviation =    15.69225
+
+Between        And            Length
+-------        ---            ------
+   6            13             26.07356
+  13          object014         0.00000
+  13          object007         0.00000
+   6             2             61.13268
+   2            14              8.89924
+  14             5             44.60388
+   5            17              1.28627
+  17          object018         0.00000
+  17            16             13.46790
+  16          object017         3.88292
+  16             8             87.93889
+   8          object009        45.08292
+   8            12              8.91708
+  12          object013         0.00000
+  12          object006         0.00000
+   5             3             58.95999
+   3            15              3.84700
+  15          object016         0.00000
+  15          object004         0.00000
+   3          object003        75.49592
+  14          object015         0.00000
+   2             1             76.92529
+   1             7             77.00472
+   7          object011         0.00000
+   7            10             17.14316
+  10          object008        41.74745
+  10          object001        36.25255
+   1            11              7.22020
+  11          object012         0.00000
+  11             4             20.97709
+   4          object005        57.84875
+   4             9              8.92077
+   9          object010         0.00000
+   9          object002         7.40430
+   6          object000        79.04325
+
+

@@ -1,0 +1,98 @@
+
+  19 Populations
+
+Fitch-Margoliash method version 3.695
+
+                  __ __             2
+                  \  \   (Obs - Exp)
+Sum of squares =  /_ /_  ------------
+                                2
+                   i  j      Obs
+
+Negative branch lengths not allowed
+
+
+  +object012 
+  ! 
+  !                                  +object016 
+  !                                  !  
+  !                                  !       +object015 
+  !                                  ! +----14  
+  !                               +-15 !     !                 +object018 
+  !                               !  ! !     +----------------17  
+  !                               !  ! !                       !  +object017 
+  !                               !  ! !                       +-16  
+  !                               !  ! !                          !  +object011 
+  !                               !  +-3                          +-10  
+  !                               !    !                             ! +object006 
+  !                      +--------4    !                             +-5 
+  !                      !        !    !                               ! +--------object003 
+  !                      !        !    !                               +-2 
+  !                      !        !    !                                 +object002 
+  !                      !        !    ! 
+  !               +------7        !    +object005 
+  !               !      !        ! 
+  !               !      !        +-----object004 
+  !               !      ! 
+  !               !      !  +object014 
+  !    +---------12      +-13  
+  !    !          !         +object013 
+  !    !          !  
+  !    !          !                +object010 
+  !  +-6          !             +--9 
+  !  ! !          +-------------8  +object009 
+  !  ! !                        ! 
+  1-11 !                        +---------object008 
+  !  ! ! 
+  !  ! +------object007 
+  !  !  
+  !  +object001 
+  ! 
+  +----------object000 
+
+
+remember: this is an unrooted tree!
+
+Sum of squares =    67.84804
+
+Average percent standard deviation =    44.67136
+
+Between        And            Length
+-------        ---            ------
+   1          object012         0.00000
+   1            11              0.00000
+  11             6              0.00000
+   6            12             47.80677
+  12             7             31.57995
+   7             4             37.28817
+   4            15              0.00000
+  15          object016         0.00000
+  15             3              0.00000
+   3            14             25.31348
+  14          object015         1.77134
+  14            17             79.11232
+  17          object018         0.00000
+  17            16              0.00000
+  16          object017         0.00000
+  16            10              0.00000
+  10          object011         0.00000
+  10             5              0.00000
+   5          object006         0.00000
+   5             2              0.00000
+   2          object003        41.20793
+   2          object002         0.00000
+   3          object005         0.00000
+   4          object004        25.42648
+   7            13              0.00000
+  13          object014         0.00000
+  13          object013         0.00000
+  12             8             60.46048
+   8             9             13.92856
+   9          object010         0.00000
+   9          object009         0.00000
+   8          object008        44.68655
+   6          object007        31.67877
+  11          object001         0.00000
+   1          object000        47.49440
+
+
