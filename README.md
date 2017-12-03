@@ -1,50 +1,37 @@
-# mo640
+# About
+This is the research project for MO640 (Computational Biology)
+- Prof. Zanoni Dias
+- State University of Campinas
+- 2nd Semester of 2017
 
-## How to use
- Create distance matrix: 
+## Students
+* Alceu Bisotto
+* Edgar Tanaka
+* Klaus Rollman
+
+## How to get started
 ```
-$ python cgp.py dataset
+git clone https://github.com/alceubissoto/mo640.git
+
+# create docker image and run container
+bash start_docker.sh
 ```
 
-Run algorithm with input:
+## How to generate datasets
+Inside the docker image explained in section "How to get started", run this bash script:
 ```
-$ python cgp.py <path_input>'
+bash final_datasets.sh
 ```
 
-## Files generated
-- *.additive.npy - additive distance matrix in npy format
-- *.additive.txt - same matrix in human readable format
-- *.noisy.npy - the additive matrix above but with gaussian noise 
-applied
-- *.noisy.txt - same as noisy.npy but in human readable format
-- *.jpg - graph chart
-
-## Strategy 1
-- input: non-additive matrix
-- create mutated tree
-- add weights to the tree
-- calculate fitness
-- go back to step 2
-
-## Strategy 2
-- non-additive matrix
-
- 
-
-## Seed matrix used
+## How to generate datasets
 ```
-    a     b     c     d     e
-a   0    12    12    12    12
-b   12    0     4     6     6
-c   12    4     0     6     6
-d   12    6     6     0     2
-e   12    6     6     2     0
-
-matrix[1][0] = 12
-
-matrix = np.array([[0, 0, 12, 12, 12, 12],
-                   [1, 12, 0, 4, 6, 6],
-                   [2, 12, 4, 0, 6, 6],
-                   [3, 12, 6, 6, 0, 2],
-                   [4, 12, 6, 6, 2, 0]])
+bash run_genetic_runner.sh
 ```
+
+## How to run the fitch/nj comparison experiments
+```
+bash run_fitch.sh
+```
+
+## Report
+https://www.overleaf.com/12223759xnvymqjjsbnq#/47955185/ 

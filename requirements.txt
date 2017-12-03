@@ -3,7 +3,6 @@ scipy
 pillow
 networkx
 matplotlib
-#biopython
 scikit-bio
 tqdm
 bokeh
