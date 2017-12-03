@@ -22,3 +22,9 @@ RUN pip install scikit-bio
 RUN pip install -r requirements.txt
 RUN apt-get install -y graphviz libgraphviz-dev pkg-config python3-tk
 RUN pip install git+git://github.com/pygraphviz/pygraphviz.git
+RUN cd phylip_linux
+RUN wget http://evolution.gs.washington.edu/phylip/download/phylip-3.696.tar.gz
+RUN tar -zxvf phylip-3.696.tar.gz
+RUN cd phylip-3.696
+RUN cp Makefile.unx Make
+RUN make install
