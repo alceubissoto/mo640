@@ -81,8 +81,7 @@ def run_phylip(args):
             shutil.copy(file_path, 'infile')
 
             # run fitch
-            # WARNING: this works on my MAC only
-            os.system('./phylip/exe/fitch < input_fitch')
+            os.system('./phylip_linux/exe/fitch < input_fitch')
 
             # copy out outputfile / outputtree
             fitch_dist_matrix = get_dist_matrix_from_tree('outtree')

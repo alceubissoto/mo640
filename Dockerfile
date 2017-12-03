@@ -1,7 +1,7 @@
 FROM ubuntu:16.04
 
 RUN apt-get update
-RUN apt-get install -y software-properties-common vim
+RUN apt-get install -y software-properties-common vim wget
 RUN add-apt-repository ppa:jonathonf/python-3.6
 RUN apt-get update
 
