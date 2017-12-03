@@ -5,9 +5,9 @@ This is the research project for MO640 (Computational Biology)
 - 2nd Semester of 2017
 
 ## Students
-* Alceu Bisotto
+* Alceu Bissoto
 * Edgar Tanaka
-* Klaus Rollman
+* Klaus Rollmann
 
 ## How to get started
 ```
