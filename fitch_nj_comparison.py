@@ -12,9 +12,10 @@ df = pd.DataFrame(columns=['iteration', 'timestamp', 'fitness', 'dataset', 'matr
 
 # append all
 for i, file in enumerate(listdir('final_results/')):
-    new_df = pd.read_csv('final_results/' + file,
-                         names=['iteration', 'timestamp', 'fitness', 'dataset', 'matrix', 'algo'])
-    df = df.append(new_df)
+    if file.endswith('_100.csv'):
+        new_df = pd.read_csv('final_results/' + file,
+                             names=['iteration', 'timestamp', 'fitness', 'dataset', 'matrix', 'algo'])
+        df = df.append(new_df)
 
 ends = df.groupby(['algo', 'matrix']).min()['fitness']
 ends.to_csv('ends.csv')
