@@ -1,0 +1,62 @@
+
+  10 Populations
+
+Fitch-Margoliash method version 3.695
+
+                  __ __             2
+                  \  \   (Obs - Exp)
+Sum of squares =  /_ /_  ------------
+                                2
+                   i  j      Obs
+
+Negative branch lengths not allowed
+
+
+  +-------------------object009 
+  ! 
+  !                   +-------------------------object008 
+  !                   ! 
+  !                   !              +-----------object007 
+  8-------------------7        +-----6 
+  !                   !    +---2     +-----------object003 
+  !                   !    !   ! 
+  !                   !    !   +-----------object001 
+  !                   +----1 
+  !                        !                      +----------object006 
+  !                        !         +------------5 
+  !                        !         !            +object005 
+  !                        +---------4 
+  !                                  !        +---object004 
+  !                                  +--------3 
+  !                                           +---------------object002 
+  ! 
+  +------------object000 
+
+
+remember: this is an unrooted tree!
+
+Sum of squares =     0.04494
+
+Average percent standard deviation =     2.25971
+
+Between        And            Length
+-------        ---            ------
+   8          object009       135.44665
+   8             7            133.49524
+   7          object008       174.31408
+   7             1             36.11957
+   1             2             25.80113
+   2             6             41.52007
+   6          object007        78.90131
+   6          object003        79.09869
+   2          object001        83.57348
+   1             4             68.78010
+   4             5             83.97463
+   5          object006        75.08082
+   5          object005         6.91918
+   4             3             58.45382
+   3          object004        28.75115
+   3          object002       104.24885
+   8          object000        85.55335
+
+

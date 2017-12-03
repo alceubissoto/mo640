@@ -1,0 +1,82 @@
+
+  15 Populations
+
+Fitch-Margoliash method version 3.695
+
+                  __ __             2
+                  \  \   (Obs - Exp)
+Sum of squares =  /_ /_  ------------
+                                2
+                   i  j      Obs
+
+Negative branch lengths not allowed
+
+
+       +-----object013 
+  +---12  
+  !    +------object004 
+  ! 
+  !                             +----object011 
+  !                        +---10  
+  !                        !    +----object007 
+  !                        ! 
+  !                  +-----6      +-------object010 
+  !                  !     !  +---9 
+  !                  !     !  !   +-----object008 
+  !                  !     +--7 
+  !           +------4        !                            +---object014 
+  !           !      !        +---------------------------13  
+  !           !      !                                     +object005 
+  !           !      ! 
+  !    +------2      +--object003 
+  !    !      ! 
+  !    !      !    +-------object009 
+  !    !      !  +-8 
+  !    !      !  ! !  +-----object012 
+  3----1      +--5 +-11  
+  !    !         !    +---------object006 
+  !    !         ! 
+  !    !         +---object001 
+  !    ! 
+  !    +object002 
+  ! 
+  +-object000 
+
+
+remember: this is an unrooted tree!
+
+Sum of squares =     0.48199
+
+Average percent standard deviation =     4.81378
+
+Between        And            Length
+-------        ---            ------
+   3            12             68.45246
+  12          object013        87.21944
+  12          object004        94.78056
+   3             1             72.52197
+   1             2             97.30020
+   2             4             94.90401
+   4             6             78.02381
+   6            10             70.70635
+  10          object011        67.45658
+  10          object007        73.54342
+   6             7             41.82653
+   7             9             56.07712
+   9          object010       107.91059
+   9          object008        89.08941
+   7            13            408.45446
+  13          object014        52.15854
+  13          object005         0.00000
+   4          object003        43.93299
+   2             5             42.17205
+   5             8             13.24548
+   8          object009       107.57107
+   8            11             42.06313
+  11          object012        82.77060
+  11          object006       137.22940
+   5          object001        49.95256
+   1          object002        14.90814
+   3          object000        25.08226
+
+

@@ -1,0 +1,62 @@
+
+  10 Populations
+
+Fitch-Margoliash method version 3.695
+
+                  __ __             2
+                  \  \   (Obs - Exp)
+Sum of squares =  /_ /_  ------------
+                                2
+                   i  j      Obs
+
+Negative branch lengths not allowed
+
+
+                      +------object008 
+           +----------7 
+           !          !  +--object009 
+           !          +--8 
+           !             !     +-------------------object005 
+           !             +-----4 
+  +--------2                   +object003 
+  !        ! 
+  !        !                                       +----------object007 
+  !        !                 +---------------------6 
+  !        !                 !                     ! +-----object006 
+  !        +-----------------3                     +-5 
+  !                          !                       +-------object004 
+  !                          ! 
+  !                          +------object001 
+  ! 
+  1---------------------object002 
+  ! 
+  +--------object000 
+
+
+remember: this is an unrooted tree!
+
+Sum of squares =     1.30356
+
+Average percent standard deviation =    12.17096
+
+Between        And            Length
+-------        ---            ------
+   1             2             69.54989
+   2             7             83.21022
+   7          object008        48.99944
+   7             8             25.25028
+   8          object009        18.54261
+   8             4             44.08488
+   4          object005       148.30878
+   4          object003         3.69122
+   2             3            130.69938
+   3             6            163.40003
+   6          object007        79.70899
+   6             5              7.93736
+   5          object006        44.44633
+   5          object004        57.55367
+   3          object001        52.21345
+   1          object002       161.16641
+   1          object000        64.83359
+
+

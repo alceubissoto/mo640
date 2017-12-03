@@ -1,0 +1,62 @@
+
+  10 Populations
+
+Fitch-Margoliash method version 3.695
+
+                  __ __             2
+                  \  \   (Obs - Exp)
+Sum of squares =  /_ /_  ------------
+                                2
+                   i  j      Obs
+
+Negative branch lengths not allowed
+
+
+  +---------------------------------object009 
+  ! 
+  !                                          +---------------object006 
+  !                           +--------------5 
+  !                    +------4              +----------------object005 
+  !                    !      ! 
+  !                    !      +-------object003 
+  !                +---2 
+  !                !   !                   +----------------object007 
+  !                !   !             +-----6 
+  !                !   +-------------3     +------------object004 
+  8----------------1                 ! 
+  !                !                 +---------------object001 
+  !                ! 
+  !                !  +-----------------------------object008 
+  !                +--7 
+  !                   +---------------------object002 
+  ! 
+  +------------------------------------object000 
+
+
+remember: this is an unrooted tree!
+
+Sum of squares =     0.04420
+
+Average percent standard deviation =     2.24121
+
+Between        And            Length
+-------        ---            ------
+   8          object009       167.17065
+   8             1             82.48504
+   1             2             21.14745
+   2             4             36.86280
+   4             5             75.79219
+   5          object006        78.39500
+   5          object005        82.60500
+   4          object003        40.63086
+   2             3             69.65826
+   3             6             31.17446
+   6          object007        84.73453
+   6          object004        64.26547
+   3          object001        78.79543
+   1             7             14.30022
+   7          object008       150.66050
+   7          object002       108.33950
+   8          object000       184.82935
+
+

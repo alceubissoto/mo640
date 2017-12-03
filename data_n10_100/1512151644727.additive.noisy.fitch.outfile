@@ -1,0 +1,62 @@
+
+  10 Populations
+
+Fitch-Margoliash method version 3.695
+
+                  __ __             2
+                  \  \   (Obs - Exp)
+Sum of squares =  /_ /_  ------------
+                                2
+                   i  j      Obs
+
+Negative branch lengths not allowed
+
+
+      +-object003 
+    +-3 
+    ! +-----------------------------------object005 
+  +-4 
+  ! !                                            +---------object009 
+  ! !                        +-------------------8 
+  ! +------------------------7                   +-object008 
+  !                          ! 
+  !                          +------------------------------object004 
+  ! 
+  !                             +------------------object001 
+  !                             ! 
+  2-----------------------------1                    +--------object007 
+  !                             !        +-----------6 
+  !                             +--------5           +----object006 
+  !                                      ! 
+  !                                      +-------------------object002 
+  ! 
+  +------------------object000 
+
+
+remember: this is an unrooted tree!
+
+Sum of squares =     0.09666
+
+Average percent standard deviation =     3.31430
+
+Between        And            Length
+-------        ---            ------
+   2             4             10.60506
+   4             3              6.33771
+   3          object003         7.91207
+   3          object005       179.08793
+   4             7            125.52423
+   7             8             98.47971
+   8          object009        50.90455
+   8          object008         9.09545
+   7          object004       154.34976
+   2             1            149.69589
+   1          object001        95.24544
+   1             5             42.78329
+   5             6             62.03633
+   6          object007        44.35280
+   6          object006        25.64720
+   5          object002        97.60632
+   2          object000        93.04431
+
+
