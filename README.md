@@ -23,7 +23,7 @@ Inside the docker image explained in section "How to get started", run this bash
 bash final_datasets.sh
 ```
 
-## How to generate datasets
+## How to run tests
 ```
 bash run_genetic_runner.sh
 ```
